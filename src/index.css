@@ -53,6 +53,10 @@ body {
     -webkit-user-select: none;
   }
 
+  button{
+    cursor: pointer;
+  }
+
   input,
   textarea,
   [contenteditable='true'] {

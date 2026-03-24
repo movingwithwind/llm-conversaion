@@ -1,6 +1,6 @@
 
 import { Link, Route, Routes } from 'react-router-dom'
-import Conversation from './pages/conversation/Conversation'
+import Main from './pages/main/main'
 
 function Home() {
 
@@ -34,7 +34,7 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
-      <Route path="/conversation" element={<Conversation />} />
+      <Route path="/main" element={<Main />} />
     </Routes>
   )
 }
