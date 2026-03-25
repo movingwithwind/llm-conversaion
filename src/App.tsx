@@ -20,7 +20,7 @@ function Home() {
           in real time without losing state.
         </p>
         <Link
-          to="/conversation"
+          to="/main"
           className="mt-6 inline-flex rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
         >
           Go to Conversation
