@@ -15,6 +15,7 @@ type Message = {
 
 export default function Evocation({className, onClose}: EvocationProps) {
     const [question, setQuestion] = useState('');
+    const [isAnswering, setIsAnswering] = useState(false);
     const [Messages, setMessages] = useState<Message[]>([
                 {id: '1', role: 'user', content: 'Hello, how are you?'},
                 {id: '2', role: 'assistant', content: 'I am fine, thank you! How can I assist you today?'},
@@ -28,25 +29,102 @@ export default function Evocation({className, onClose}: EvocationProps) {
                 {id: '10', role: 'assistant', content: 'You\'re welcome! If you have any other questions or need assistance, feel free to ask!'},
                 {id: '11', role: 'user', content: 'Actually, I do have one more question. Can you tell me a fun fact?'},
             ])
+
+    function updateAssistantMessageById(assistantId: string, content: string) {
+        setMessages(prev => prev.map(message => {
+            if (message.id === assistantId && message.role === 'assistant') {
+                return { ...message, content };
+            }
+            return message;
+        }));
+    }
+
+    async function readSseAnswerStream(response: Response, assistantId: string) {
+        if (!response.body) throw new Error('Response body is empty');
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        let assistantMessageText = '';
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            if (!value) continue;
+
+            buffer += decoder.decode(value, { stream: true });
+            const frames = buffer.split('\n\n');
+            buffer = frames.pop() ?? '';
+
+            for (const frame of frames) {
+                const lines = frame.split('\n');
+                let eventName = '';
+                let dataText = '';
+
+                for (const rawLine of lines) {
+                    const line = rawLine.trim();
+                    if (line.startsWith('event:')) {
+                        eventName = line.slice(6).trim();
+                    } else if (line.startsWith('data:')) {
+                        dataText = line.slice(5).trim();
+                    }
+                }
+
+                if (!eventName || !dataText) continue;
+                if (eventName === 'done' || dataText === '[DONE]') return;
+                if (eventName !== 'answer') continue;
+
+                try {
+                    const parsed = JSON.parse(dataText) as { answer?: string };
+                    if (!parsed.answer) continue;
+
+                    assistantMessageText += parsed.answer;
+                    updateAssistantMessageById(assistantId, assistantMessageText);
+                } catch {
+                    continue;
+                }
+            }
+        }
+
+        const tail = decoder.decode();
+        if (tail) {
+            assistantMessageText += tail;
+            updateAssistantMessageById(assistantId, assistantMessageText);
+        }
+    }
+
     async function fetchAnswer(question: string) {
-        const JsonBody={message: question}
-        const response = await fetch('/api/chat', {
+        if (!question.trim()) return;
+
+        setQuestion('');
+        setIsAnswering(true);
+        const assistantId = (Date.now() + 1).toString();
+        setMessages(prev => [
+            ...prev,
+            { id: Date.now().toString(), role: 'user', content: question },
+            { id: assistantId, role: 'assistant', content: '' },
+        ]);
+
+        try {
+            const JsonBody = { message: question };
+            const response = await fetch('/api/chat', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(JsonBody)
             });
-        if(!response.ok) throw new Error('Network response was not ok');
-        const data = await response.json();
-        console.log(data);
-        setMessages(prev => [...prev, {id: Date.now().toString(), role: 'user', content: question}, {id: (Date.now() + 1).toString(), role: 'assistant', content: data.output}]);
+            if (!response.ok) throw new Error('Network response was not ok');
+            await readSseAnswerStream(response, assistantId);
+        } finally {
+            setIsAnswering(false);
+        }
     }
     return <>
         <div className={`${className} relative overflow-hidden`}>
             <MessageQueue Messages={Messages} />
             <button onClick={onClose} className="absolute top-4 right-4">X</button>
-            <Input  className="absolute bottom-2 w-4/5 left-1/2 -translate-x-1/2" question={question} setQuestion={setQuestion} onSubmit={fetchAnswer} />
+            <Input  className="absolute bottom-2 w-4/5 left-1/2 -translate-x-1/2" question={question} setQuestion={setQuestion} onSubmit={fetchAnswer} isAnswering={isAnswering} />
         </div>
     </>
 }

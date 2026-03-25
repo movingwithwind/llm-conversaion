@@ -1,4 +1,4 @@
-export default function Input({className, question, setQuestion, onSubmit}: {className?: string; question: string; setQuestion: (q: string) => void; onSubmit: (q: string) => void}) {
+export default function Input({className, question, setQuestion, onSubmit, isAnswering}: {className?: string; question: string; setQuestion: (q: string) => void; onSubmit: (q: string) => void; isAnswering: boolean}) {
     return <>
         <form onSubmit={(e) => {e.preventDefault(); onSubmit(question);}}>
         <input 
@@ -7,6 +7,7 @@ export default function Input({className, question, setQuestion, onSubmit}: {cla
             placeholder="......" 
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
+            disabled={isAnswering}
         /></form>
     </>
 }
