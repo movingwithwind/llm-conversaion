@@ -1,6 +1,8 @@
 import Input from "./input";
 import MessageQueue from "./Message-quene";
 import {  useState } from "react";
+import {toast} from"sonner"
+import { createParser } from 'eventsource-parser';
 
 type EvocationProps = {
     className?: string;
@@ -44,64 +46,43 @@ export default function Evocation({className, onClose}: EvocationProps) {
 
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
-        let buffer = '';
         let assistantMessageText = '';
+        let done = false;
 
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            if (!value) continue;
-
-            buffer += decoder.decode(value, { stream: true });
-            const frames = buffer.split('\n\n');
-            buffer = frames.pop() ?? '';
-
-            for (const frame of frames) {
-                const lines = frame.split('\n');
-                let eventName = '';
-                let dataText = '';
-
-                for (const rawLine of lines) {
-                    const line = rawLine.trim();
-                    if (line.startsWith('event:')) {
-                        eventName = line.slice(6).trim();
-                    } else if (line.startsWith('data:')) {
-                        dataText = line.slice(5).trim();
-                    }
+        const parser = createParser({
+            onEvent(event){
+                if(event.event === 'done'||event.data === '[DONE]'){ 
+                    done = true;
+                    return;
                 }
-
-                if (!eventName || !dataText) continue;
-                if (eventName === 'done' || dataText === '[DONE]') return;
-                if (eventName !== 'answer') continue;
-
-                try {
-                    const parsed = JSON.parse(dataText) as { answer?: string };
-                    if (!parsed.answer) continue;
-
-                    assistantMessageText += parsed.answer;
+                if(event.event !== 'answer') return;
+                try{
+                    const data = JSON.parse(event.data);
+                    if(!data.answer) return;
+                    assistantMessageText += data.answer;
                     updateAssistantMessageById(assistantId, assistantMessageText);
-                } catch {
-                    continue;
+                }catch{
+                    throw new Error('Failed to parse SSE data');
                 }
-            }
+        }});
+        while(!done) {
+            const { value, done } = await reader.read();
+            if(done) break;
+            if(!value) continue;
+            parser.feed(decoder.decode(value, { stream: true }));
+            console.log('Received chunk:', decoder.decode(value, { stream: true }));
         }
-
-        const tail = decoder.decode();
-        if (tail) {
-            assistantMessageText += tail;
-            updateAssistantMessageById(assistantId, assistantMessageText);
-        }
+        parser.feed(decoder.decode());
     }
-
     async function fetchAnswer(question: string) {
         if (!question.trim()) return;
 
         setQuestion('');
         setIsAnswering(true);
-        const assistantId = (Date.now() + 1).toString();
+        const assistantId = (Messages.length + 2).toString();
         setMessages(prev => [
             ...prev,
-            { id: Date.now().toString(), role: 'user', content: question },
+            { id: (Messages.length + 1).toString(), role: 'user', content: question },
             { id: assistantId, role: 'assistant', content: '' },
         ]);
 
@@ -116,7 +97,10 @@ export default function Evocation({className, onClose}: EvocationProps) {
             });
             if (!response.ok) throw new Error('Network response was not ok');
             await readSseAnswerStream(response, assistantId);
-        } finally {
+        }catch (error) {
+            toast.error(`Failed to fetch answer: ${(error as Error).message}`);
+        } 
+        finally {
             setIsAnswering(false);
         }
     }
