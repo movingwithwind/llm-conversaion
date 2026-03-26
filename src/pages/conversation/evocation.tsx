@@ -47,6 +47,8 @@ export default function Evocation({className, onClose}: EvocationProps) {
         const decoder = new TextDecoder();
         let assistantMessageText = '';
         let done = false;
+        
+        let rafId: number | null = null;
 
         const parser = createParser({
             onEvent(event){
@@ -59,7 +61,12 @@ export default function Evocation({className, onClose}: EvocationProps) {
                     const data = JSON.parse(event.data);
                     if(!data.answer) return;
                     assistantMessageText += data.answer;
-                    updateAssistantMessageById(assistantId, assistantMessageText);
+                    if(!rafId){
+                        rafId = requestAnimationFrame(() => {
+                            updateAssistantMessageById(assistantId, assistantMessageText);
+                            rafId = null; // 执行完后清理 ID，允许下一帧调度
+                        });                        
+                    }
                 }catch{
                     throw new Error('Failed to parse SSE data');
                 }
@@ -72,6 +79,12 @@ export default function Evocation({className, onClose}: EvocationProps) {
             console.log('Received chunk:', decoder.decode(value, { stream: true }));
         }
         parser.feed(decoder.decode());
+
+        //清理遗留的 raf 调度，确保最终结果被正确更新
+        if (rafId !== null) {
+            cancelAnimationFrame(rafId);
+        }
+        updateAssistantMessageById(assistantId, assistantMessageText);
     }
     async function fetchAnswer(question: string) {
         if (!question.trim()) return;
