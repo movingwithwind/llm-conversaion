@@ -28,8 +28,7 @@ export default function Evocation({className, onClose}: EvocationProps) {
                 {id: '7', role: 'user', content: 'Haha, you\'re really good at jokes! Can you tell me one more?'},
                 {id: '8', role: 'assistant', content: 'Thank you! Here\'s one more: Why don\'t skeletons fight each other? They don\'t have the guts!'},
                 {id: '9', role: 'user', content: 'Haha, that\'s hilarious! Thanks for the jokes!'},
-                {id: '10', role: 'assistant', content: 'You\'re welcome! If you have any other questions or need assistance, feel free to ask!'},
-                {id: '11', role: 'user', content: 'Actually, I do have one more question. Can you tell me a fun fact?'},
+                {id: '10', role: 'assistant', content: 'You\'re welcome! If you have any other questions or need assistance, feel free to ask! **sakdjflsadf**'},
             ])
 
     function updateAssistantMessageById(assistantId: string, content: string) {

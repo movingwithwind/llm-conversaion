@@ -1,6 +1,8 @@
-import { useMemo } from 'react';
-import MarkdownIt from 'markdown-it';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeHighlight from 'rehype-highlight';
 import { StickToBottom } from 'use-stick-to-bottom';
+import CodePre from '../../compents/CodePre';
 
 type MessageQueueProps = {
   id: string;
@@ -9,16 +11,6 @@ type MessageQueueProps = {
 }[];
 
 export default function MessageQueue({ Messages }: { Messages: MessageQueueProps }) {
-  const md = useMemo(
-    () =>
-      new MarkdownIt({
-        html: false,
-        linkify: true,
-        breaks: true,
-        typographer: true,
-      }),
-    []
-  );
 
   return (
     <StickToBottom className='h-full overflow-y-auto' initial='smooth' resize='smooth'>
@@ -30,7 +22,15 @@ export default function MessageQueue({ Messages }: { Messages: MessageQueueProps
             id={message.id}
           >
             {message.role === 'assistant' ? (
-              <div dangerouslySetInnerHTML={{ __html: md.render(message.content) }} />
+              <div className='prose prose-sm max-w-none'>
+                <ReactMarkdown
+                  remarkPlugins={[remarkGfm]}
+                  rehypePlugins={[[rehypeHighlight, { ignoreMissing: true }]]}
+                  components={{ pre: CodePre }}
+                >
+                    {message.content}
+                </ReactMarkdown>
+              </div>
             ) : (
               message.content
             )}
