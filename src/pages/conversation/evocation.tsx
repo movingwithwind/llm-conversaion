@@ -130,6 +130,6 @@ export default function Evocation({className, onClose}: EvocationProps) {
         <div className={`${className} relative overflow-hidden ${Loading ? 'animate-pulse' : ''}`}>
             {Loading ? <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 "><div className="animate-spin-custom"><Loader className="w-8 h-8" /></div></div>:<MessageQueue Messages={Messages} />}
             <button onClick={onClose} className="absolute top-4 right-4">X</button>
-            <Input  className="absolute bottom-2 w-4/5 left-1/2 -translate-x-1/2" question={question} setQuestion={setQuestion} onSubmit={fetchAnswer} isAnswering={isAnswering} />
+            <Input  className="fixed bottom-8 left-1/2 -translate-x-1/2" question={question} setQuestion={setQuestion} onSubmit={fetchAnswer} isAnswering={isAnswering} />
         </div>)
 }
