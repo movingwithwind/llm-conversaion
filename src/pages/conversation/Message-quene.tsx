@@ -10,10 +10,11 @@ type MessageQueueProps = {
   content: string;
 }[];
 
-export default function MessageQueue({ Messages }: { Messages: MessageQueueProps }) {
+export default function MessageQueue({ Messages}: { Messages: MessageQueueProps }) {
 
   return (
-    <StickToBottom className='h-full overflow-y-auto' initial='smooth' resize='smooth'>
+    <>
+        <StickToBottom className='h-full overflow-y-auto' initial='smooth' resize='smooth'>
       <StickToBottom.Content className='flex flex-col gap-2 mb-16 p-6'>
         {Messages.map((message) => (
           <div
@@ -38,5 +39,7 @@ export default function MessageQueue({ Messages }: { Messages: MessageQueueProps
         ))}
       </StickToBottom.Content>
     </StickToBottom>
+    </>
+
   );
 }
