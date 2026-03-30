@@ -49,10 +49,10 @@ body {
 }
 
 @layer base {
-  * {
+  /* * {
     user-select: none;
     -webkit-user-select: none;
-  }
+  } */
 
   button{
     cursor: pointer;
