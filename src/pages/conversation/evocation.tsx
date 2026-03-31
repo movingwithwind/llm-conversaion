@@ -1,7 +1,8 @@
 import Input from "./input";
 import MessageQueue from "./Message-quene";
 import {  useState,useEffect,useRef } from "react";
-import {toast} from"sonner"
+import {toast} from"sonner";
+import { FileChartColumnIncreasing } from 'lucide-react';
 import { useFileDrop } from "./useFileDrop";
 import { SUPPORTED_MIME_TYPES } from "../../compents/FileType";
 import {  Loader } from 'lucide-react';
@@ -12,7 +13,7 @@ type EvocationProps = {
     onClose: () => void;
 }
 type Message = {
-    id: string;
+    id: number;
     role: 'user' | 'assistant';
     content: string;
 };
@@ -29,7 +30,10 @@ export default function Evocation({className, onClose}: EvocationProps) {
     const formData = new FormData();
     const fileInput = useRef<HTMLInputElement>(null);
 
-    function updateAssistantMessageById(assistantId: string, content: string) {
+    function updateAssistantMessageById(assistantId: number, content: string) {
+        console.log(assistantId)
+        console.log(content)
+        console.log(Messages)
         setMessages(prev => prev.map(message => {
             if (message.id === assistantId && message.role === 'assistant') {
                 return { ...message, content };
@@ -38,9 +42,8 @@ export default function Evocation({className, onClose}: EvocationProps) {
         }));
     }
 
-    async function readSseAnswerStream(response: Response, assistantId: string) {
+    async function readSseAnswerStream(response: Response, assistantId: number) {
         if (!response.body) throw new Error('Response body is empty');
-
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let assistantMessageText = '';
@@ -103,18 +106,16 @@ export default function Evocation({className, onClose}: EvocationProps) {
         }
     }
 
-    function handlecancelFile(){
-        setFile(null);
-    }
-    async function fetchAnswer(question: string) {
+    async function fetchPostAnswer(question: string) {
         if (!question.trim()) return;
 
         setQuestion('');
+        setFile(null);
         setIsAnswering(true);
-        const assistantId = (Messages.length + 2).toString();
+        const assistantId = Messages.length + 2;
         setMessages(prev => [
             ...prev,
-            { id: (Messages.length + 1).toString(), role: 'user', content: question },
+            { id: Messages.length + 1, role: 'user', content: question },
             { id: assistantId, role: 'assistant', content: '' },
         ]);
 
@@ -133,6 +134,34 @@ export default function Evocation({className, onClose}: EvocationProps) {
             toast.error(`Failed to fetch answer: ${(error as Error).message}`);
         } 
         finally {
+            setIsAnswering(false);
+        }
+    }
+
+    async function fetchPutAnswer(node_id=1,message_id:number,role:"user"|"assistant",message?:string) {
+         setIsAnswering(true);
+         setMessages(
+        Messages.map((msg) => {
+            if (msg.id === message_id) {
+            return { ...msg, content: '' }; 
+            }
+            return msg; 
+        })
+        );
+        const body={node_id,message_id,role}
+        try{
+            const response = await fetch('/api/chat', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(body),
+            });
+            if (!response.ok) throw new Error('Network response was not ok');
+            await readSseAnswerStream(response, message_id);
+        }catch (error) {
+            toast.error(`Failed to fetch answer: ${(error as Error).message}`);
+        }finally {
             setIsAnswering(false);
         }
     }
@@ -170,7 +199,7 @@ export default function Evocation({className, onClose}: EvocationProps) {
             )}
 
             {/*消息预加载部分*/}
-            {Loading ? <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 "><div className="animate-spin-custom"><Loader className="w-8 h-8" /></div></div>:<MessageQueue Messages={Messages} />}
+            {Loading ? <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 "><div className="animate-spin-custom"><Loader className="w-8 h-8" /></div></div>:<MessageQueue Messages={Messages} retry={fetchPutAnswer} setMessages={setMessages}/>}
 
             {/* 关闭按钮 */}
             <button onClick={onClose} className="absolute top-4 right-4">X</button>
@@ -180,7 +209,8 @@ export default function Evocation({className, onClose}: EvocationProps) {
             
                 {/* 文件列表 */}
                 {file&&<div className="mb-2 group pl-2 pt-2">
-                            <div className="flex items-center gap-2 px-3 py-1.5 bg-white/80 backdrop-blur border border-gray-200 rounded-xl  text-gray-700 hover:bg-black/10 w-[200px] h-[60px]">
+                            <div className="flex items-center gap-2 px-3 py-1.5 bg-white/80 backdrop-blur border border-gray-200 rounded  text-gray-700 hover:bg-black/10 w-[200px] h-[60px]">
+                                <div className="bg-blue-500 text-white rounded-sm w-8 h-8 flex items-center justify-center flex-shrink-0"><FileChartColumnIncreasing className="w-4 h-4" /> </div>
                                 <span className="max-w-[160px] truncate">{file.name}</span>
                                 <button
                                 onClick={() => setFile(null)}
@@ -189,7 +219,7 @@ export default function Evocation({className, onClose}: EvocationProps) {
                         </div>}
 
                 {/* 实际输入框 */}
-                <Input   question={question} setQuestion={setQuestion} onSubmit={fetchAnswer} isAnswering={isAnswering} fileInput={()=>fileInput?.current?.click()}/>
+                <Input   question={question} setQuestion={setQuestion} onSubmit={fetchPostAnswer} isAnswering={isAnswering} fileInput={()=>fileInput?.current?.click()}/>
             
             </div>}
 

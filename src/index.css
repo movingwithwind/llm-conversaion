@@ -221,6 +221,12 @@ pre code {
   line-height: 1.55;
 }
 
+.prose code { 
+  font-size: 0.9rem;
+  line-height: 1.55;
+  background: #f8fafc;
+}
+
 @keyframes spin {
   from {
     transform: rotate(0deg);
