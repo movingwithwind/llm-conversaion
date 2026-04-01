@@ -15,12 +15,14 @@ type EvocationProps = {
 type Message = {
     id: number;
     cliendId: string;
+    parent_id: number | null;
     role: 'user' | 'assistant';
     content: string;
 };
 
 type backMessage = {
     id: number;
+    parent_id: number | null;
     role: 'user' | 'assistant';
     content: string;
 };
@@ -30,7 +32,16 @@ type DoneData = {
     client_assistant_id: string;
     userid: number;
     assistantid: number;
+    user_parent_id: number | null;
+    assistant_parent_id: number | null;
 }
+
+type RegenerateBody = {
+  node_id: number;
+  message_id: number;
+  role: 'user' | 'assistant';
+  message?: string; // 仅 user 编辑时用
+};
 
 function isDoneData(value: unknown): value is DoneData {
     if (!value || typeof value !== 'object') return false;
@@ -39,7 +50,9 @@ function isDoneData(value: unknown): value is DoneData {
         typeof data.client_user_id === 'string' &&
         typeof data.client_assistant_id === 'string' &&
         typeof data.userid === 'number' &&
-        typeof data.assistantid === 'number'
+        typeof data.assistantid === 'number' &&
+        (typeof data.user_parent_id === 'number' || data.user_parent_id === null) &&
+        (typeof data.assistant_parent_id === 'number' || data.assistant_parent_id === null)
     );
 }
 
@@ -94,10 +107,10 @@ export default function Evocation({className, onClose}: EvocationProps) {
                         setMessages(prev =>
                             prev.map((msg) => {
                                 if (msg.role === 'user' && msg.cliendId === data.client_user_id) {
-                                    return { ...msg, id: data.userid };
+                                    return { ...msg, id: data.userid, parent_id: data.user_parent_id };
                                 }
                                 if (msg.role === 'assistant' && msg.cliendId === data.client_assistant_id) {
-                                    return { ...msg, id: data.assistantid };
+                                    return { ...msg, id: data.assistantid, parent_id: data.assistant_parent_id };
                                 }
                                 return msg;
                             })
@@ -167,8 +180,8 @@ export default function Evocation({className, onClose}: EvocationProps) {
         const assistantCliendId = `assistant-${Date.now()}-${assistantId}`;
         setMessages(prev => [
             ...prev,
-            { id: userId, role: 'user', content: question, cliendId: userCliendId },
-            { id: assistantId, role: 'assistant', content: '', cliendId: assistantCliendId },
+            { id: userId, role: 'user', content: question, cliendId: userCliendId, parent_id: null },
+            { id: assistantId, role: 'assistant', content: '', cliendId: assistantCliendId, parent_id: userId },
         ]);
 
         try {
@@ -194,15 +207,25 @@ export default function Evocation({className, onClose}: EvocationProps) {
 
     async function fetchPutAnswer(node_id=1,message_id:number,role:"user"|"assistant",message?:string) {
         setIsAnswering(true);
-         setMessages(
-        Messages.map((msg) => {
-            if (msg.id === message_id) {
-            return { ...msg, content: '' }; 
-            }
-            return msg; 
-        })
+        const targetAssistant =
+            role === 'user'
+                ? Messages.find(msg => msg.role === 'assistant' && msg.parent_id === message_id)
+                : Messages.find(msg => msg.id === message_id && msg.role === 'assistant');
+        const sseAssistantId = targetAssistant?.id ?? message_id;
+
+        setMessages(prev =>
+            prev.map((msg) => {
+                const shouldUpdate =
+                    role === 'user'
+                        ? msg.role === 'assistant' && msg.parent_id === message_id
+                        : msg.id === message_id;
+
+                if (!shouldUpdate) return msg;
+                return { ...msg, content: '' };
+            })
         );
-        const body={node_id,message_id,role}
+        const body: RegenerateBody = { node_id, message_id, role };
+        if (message) body.message = message;
         try{
             const response = await fetch('/api/chat', {
                 method: 'PUT',
@@ -212,7 +235,7 @@ export default function Evocation({className, onClose}: EvocationProps) {
                 body: JSON.stringify(body),
             });
             if (!response.ok) throw new Error('Network response was not ok');
-            await readSseAnswerStream(response, message_id);
+            await readSseAnswerStream(response, sseAssistantId);
         }catch (error) {
             toast.error(`Failed to fetch answer: ${(error as Error).message}`);
         }finally {
