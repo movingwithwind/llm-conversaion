@@ -14,9 +14,34 @@ type EvocationProps = {
 }
 type Message = {
     id: number;
+    cliendId: string;
     role: 'user' | 'assistant';
     content: string;
 };
+
+type backMessage = {
+    id: number;
+    role: 'user' | 'assistant';
+    content: string;
+};
+
+type DoneData = {
+    client_user_id: string;
+    client_assistant_id: string;
+    userid: number;
+    assistantid: number;
+}
+
+function isDoneData(value: unknown): value is DoneData {
+    if (!value || typeof value !== 'object') return false;
+    const data = value as Record<string, unknown>;
+    return (
+        typeof data.client_user_id === 'string' &&
+        typeof data.client_assistant_id === 'string' &&
+        typeof data.userid === 'number' &&
+        typeof data.assistantid === 'number'
+    );
+}
 
 
 export default function Evocation({className, onClose}: EvocationProps) {
@@ -31,9 +56,6 @@ export default function Evocation({className, onClose}: EvocationProps) {
     const fileInput = useRef<HTMLInputElement>(null);
 
     function updateAssistantMessageById(assistantId: number, content: string) {
-        console.log(assistantId)
-        console.log(content)
-        console.log(Messages)
         setMessages(prev => prev.map(message => {
             if (message.id === assistantId && message.role === 'assistant') {
                 return { ...message, content };
@@ -53,14 +75,41 @@ export default function Evocation({className, onClose}: EvocationProps) {
 
         const parser = createParser({
             onEvent(event){
-                if(event.event === 'done'||event.data === '[DONE]'){ 
+                const eventType = (event.event ?? '').trim();//去除空格避免影响判断
+                const payload = (event.data ?? '').trim();
+                let parsedData: unknown = null;
+
+                if (payload.startsWith('{')) {
+                    try {
+                        parsedData = JSON.parse(payload);
+                    } catch {
+                        parsedData = null;
+                    }
+                }
+
+
+                if(eventType === 'done' || payload === '[DONE]' || isDoneData(parsedData)){
+                    if(isDoneData(parsedData)) {
+                        const data = parsedData;
+                        setMessages(prev =>
+                            prev.map((msg) => {
+                                if (msg.role === 'user' && msg.cliendId === data.client_user_id) {
+                                    return { ...msg, id: data.userid };
+                                }
+                                if (msg.role === 'assistant' && msg.cliendId === data.client_assistant_id) {
+                                    return { ...msg, id: data.assistantid };
+                                }
+                                return msg;
+                            })
+                        );
+                    }
                     done = true;
                     return;
                 }
-                if(event.event !== 'answer') return;
+                if(eventType !== 'answer') return;
                 try{
-                    const data = JSON.parse(event.data);
-                    if(!data.answer) return;
+                    const data = (parsedData ?? JSON.parse(payload)) as { answer?: string };
+                    if(typeof data.answer !== 'string' || !data.answer) return;
                     assistantMessageText += data.answer;
                     if(!rafId){
                         rafId = requestAnimationFrame(() => {
@@ -112,16 +161,21 @@ export default function Evocation({className, onClose}: EvocationProps) {
         setQuestion('');
         setFile(null);
         setIsAnswering(true);
+        const userId = Messages.length + 1;
+        const userCliendId = `user-${Date.now()}-${userId}`;
         const assistantId = Messages.length + 2;
+        const assistantCliendId = `assistant-${Date.now()}-${assistantId}`;
         setMessages(prev => [
             ...prev,
-            { id: Messages.length + 1, role: 'user', content: question },
-            { id: assistantId, role: 'assistant', content: '' },
+            { id: userId, role: 'user', content: question, cliendId: userCliendId },
+            { id: assistantId, role: 'assistant', content: '', cliendId: assistantCliendId },
         ]);
 
         try {
             formData.append('message', question);
             formData.append('id','1');
+            formData.append('client_user_id', userCliendId);
+            formData.append('client_assistant_id', assistantCliendId);
             if(file) formData.append('file',file);
             console.log(formData)
             const response = await fetch('/api/chat', {
@@ -139,7 +193,7 @@ export default function Evocation({className, onClose}: EvocationProps) {
     }
 
     async function fetchPutAnswer(node_id=1,message_id:number,role:"user"|"assistant",message?:string) {
-         setIsAnswering(true);
+        setIsAnswering(true);
          setMessages(
         Messages.map((msg) => {
             if (msg.id === message_id) {
@@ -172,9 +226,9 @@ export default function Evocation({className, onClose}: EvocationProps) {
                 'Content-Type': 'application/json'
             },
         });
-        const data = await response.json();
+        const data = await response.json() ;
         if(!response.ok) throw new Error(`Network response was not ok,${data.message}`);
-        setMessages(data);
+        setMessages(data.map((item:backMessage) =>({...item,cliendId:`${item.role}-${Date.now()}-${item.id}` })));
         setLoading(false);
     }
     useEffect(()=>{

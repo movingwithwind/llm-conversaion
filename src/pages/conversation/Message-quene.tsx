@@ -9,6 +9,7 @@ import { useRef,useState } from 'react';
 
 type Message= {
   id: number;
+  cliendId: string;
   role: 'user' | 'assistant';
   content: string;
 };
@@ -40,12 +41,12 @@ export default function MessageQueue({ Messages,retry,setMessages}: { Messages: 
       <StickToBottom.Content className='flex flex-col gap-2 mb-16 p-6'>
         {Messages.map((message) => (
           <div
-            key={message.id}
+            key={message.cliendId}
             className={'p-4 rounded-lg mb-2 max-w-[85%] ' + (message.role === 'user' ? 'group bg-black/10 self-end' : ' self-start')}
             ref={(el) => (el && (messageRefs.current[message.id] = el), undefined)}>
 
             {message.role === 'assistant' ? (
-              <div className='prose prose-sm max-w-none' id={`message-${message.id}`}>
+              <div className='prose prose-sm max-w-none' id={`message-${message.cliendId}`}>
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
                   rehypePlugins={[[rehypeHighlight, { ignoreMissing: true }]]}
@@ -59,7 +60,7 @@ export default function MessageQueue({ Messages,retry,setMessages}: { Messages: 
                 </div>
               </div>
             ) : (
-              <div className=' relative' id={`message-${message.id}`}>
+              <div className=' relative' id={`message-${message.cliendId}`}>
                   {isEditing?
                   <input value={message.content} onChange={(e)=>handleEdit(e,message)} />:<div>{message.content}</div>}
                 <div className='opacity-0 group-hover:opacity-100  absolute right-0 -bottom-11 flex gap-1 text-gray-500 transition-opacity duration-200'>
