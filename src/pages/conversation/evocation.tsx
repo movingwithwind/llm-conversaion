@@ -62,7 +62,7 @@ export default function Evocation({className, onClose}: EvocationProps) {
 
     const [question, setQuestion] = useState('');
     const [Loading, setLoading]=useState(true);
-    const [file, setFile] = useState<File | null>(null);
+    const [files, setFiles] = useState<File[] | null>(null);
     const [isAnswering, setIsAnswering] = useState(false);
     const [Messages, setMessages] = useState<Message[]>([])
     const formData = new FormData();
@@ -92,7 +92,7 @@ export default function Evocation({className, onClose}: EvocationProps) {
                 const payload = (event.data ?? '').trim();
                 let parsedData: unknown = null;
 
-                if (payload.startsWith('{')) {
+                if (payload.startsWith('{')) {// 尝试解析 JSON 数据，这个返回只有JSON和[DONE]两种情况
                     try {
                         parsedData = JSON.parse(payload);
                     } catch {
@@ -150,19 +150,19 @@ export default function Evocation({className, onClose}: EvocationProps) {
         updateAssistantMessageById(assistantId, assistantMessageText);
     }
      function handleFileupload(e: React.ChangeEvent<HTMLInputElement>){
-        const file = e.target.files?.[0];
-        if(file&&SUPPORTED_MIME_TYPES.includes(file.type)) {setFile(file); console.log(file.type)}
+        const files = e.target.files;
+        const validFiles = Array.from(files ?? []).filter(file => SUPPORTED_MIME_TYPES.includes(file.type));
+        if(validFiles.length > 0)setFiles(prev => [...(prev ?? []), ...validFiles]);
         else toast.error("Please upload a file with a supported MIME type.");
     }
 
     const handleFileDrop=(e: React.DragEvent<HTMLDivElement>) => {
         handleDrop(e);
 
-        const droppedFile = e.dataTransfer?.files?.[0];
-
-        if (droppedFile && SUPPORTED_MIME_TYPES.includes(droppedFile.type)) {
-            setFile(droppedFile);
-            console.log('drop file:', droppedFile.type);
+        const droppedFile = e.dataTransfer?.files;
+        const validFiles = Array.from(droppedFile ?? []).filter(file => SUPPORTED_MIME_TYPES.includes(file.type));
+        if (validFiles.length > 0) {
+            setFiles(prev => [...(prev ?? []), ...validFiles]);
         } else {
             toast.error("Unsupported file type");
         }
@@ -172,7 +172,7 @@ export default function Evocation({className, onClose}: EvocationProps) {
         if (!question.trim()) return;
 
         setQuestion('');
-        setFile(null);
+        setFiles(null);
         setIsAnswering(true);
         const userId = Messages.length + 1;
         const userCliendId = `user-${Date.now()}-${userId}`;
@@ -189,7 +189,11 @@ export default function Evocation({className, onClose}: EvocationProps) {
             formData.append('id','1');
             formData.append('client_user_id', userCliendId);
             formData.append('client_assistant_id', assistantCliendId);
-            if(file) formData.append('file',file);
+            if(files) {
+                for(const file of files) {
+                    formData.append('file', file);
+                }
+            }
             console.log(formData)
             const response = await fetch('/api/chat', {
                 method: 'POST',
@@ -285,16 +289,17 @@ export default function Evocation({className, onClose}: EvocationProps) {
             {Loading?'':<div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-full max-w-[650px] flex flex-col overflow-hidden rounded-3xl border border-gray-300 bg-white">
             
                 {/* 文件列表 */}
-                {file&&<div className="mb-2 group pl-2 pt-2">
-                            <div className="flex items-center gap-2 px-3 py-1.5 bg-white/80 backdrop-blur border border-gray-200 rounded  text-gray-700 hover:bg-black/10 w-[200px] h-[60px]">
-                                <div className="bg-blue-500 text-white rounded-sm w-8 h-8 flex items-center justify-center flex-shrink-0"><FileChartColumnIncreasing className="w-4 h-4" /> </div>
-                                <span className="max-w-[160px] truncate">{file.name}</span>
-                                <button
-                                onClick={() => setFile(null)}
-                                className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 self-start text-xs">X</button>
-                            </div>
-                        </div>}
-
+                <div className="mb-2 group pl-2 pt-2 flex flex-wrap gap-2 max-h-[120px] overflow-y-auto">
+                    {files&&files.map((file,index)=>(
+                                <div className="flex items-center gap-2 px-3 py-1.5 bg-white/80 backdrop-blur border border-gray-200 rounded  text-gray-700 hover:bg-black/10 w-[200px] h-[60px]">
+                                    <div className="bg-blue-500 text-white rounded-sm w-8 h-8 flex items-center justify-center flex-shrink-0"><FileChartColumnIncreasing className="w-4 h-4" /> </div>
+                                    <span className="max-w-[160px] truncate">{file.name}</span>
+                                    <button
+                                    onClick={() => setFiles(prev => prev ? prev.filter((_, i) => i !== index) : null)}
+                                    className="opacity-0 group-hover:opacity-100 transition-opacity text-gray-400 self-start text-xs">X</button>
+                                </div>
+                            ))}
+                </div>
                 {/* 实际输入框 */}
                 <Input   question={question} setQuestion={setQuestion} onSubmit={fetchPostAnswer} isAnswering={isAnswering} fileInput={()=>fileInput?.current?.click()}/>
             

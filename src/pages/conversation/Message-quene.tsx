@@ -18,8 +18,11 @@ type Message = {
 export default function MessageQueue({ Messages,retry,setMessages}: { Messages: Message[],retry:(node_id:number,message_id:number,role:"user"|"assistant",message?:string)=>void,setMessages:React.Dispatch<React.SetStateAction<Message[]>>}) {
   const messageRefs = useRef<HTMLDivElement[]>([]); 
   const [isEditing,setisEditing]=useState(new Array(Messages.length).fill(false));
+  const [isCopying,setisCopying]=useState(new Array(Messages.length).fill(false));
 
-  function handleCopy(id:number) {
+  function handleCopy(id:number,index:number) {
+      setisCopying(prev => { const newCopying = [...prev]; newCopying[index] = true; return newCopying; });
+      setTimeout(() => {setisCopying(prev => { const newCopying = [...prev]; newCopying[index] = false; return newCopying; });}, 1000);
       if (typeof window === "undefined") return;
       const text = messageRefs.current[id].textContent || "";
       navigator.clipboard.writeText(text).catch(() => {toast.error("复制失败")});
@@ -60,7 +63,7 @@ export default function MessageQueue({ Messages,retry,setMessages}: { Messages: 
                     {message.content}
                 </ReactMarkdown>
                 <div className='w-full flex  h-6 pl-4 gap-2'>
-                  <button className='hover:bg-gray-200 h-6 w-6 flex justify-center items-center rounded-sm' onClick={() => handleCopy(message.id)}><Copy className='h-4 w-4'/></button>
+                  <button className='hover:bg-gray-200 h-6 w-6 flex justify-center items-center rounded-sm' onClick={() => handleCopy(message.id,index)}>{isCopying[index] ? <Check className='h-4 w-4'/> : <Copy className='h-4 w-4'/>}</button>
                   <button className='hover:bg-gray-200 h-6 w-6 flex justify-center items-center rounded-sm' onClick={()=>{retry(1,message.id,"assistant")}}><RefreshCw className='h-4 w-4'/></button>
                 </div>
               </div>
@@ -69,7 +72,7 @@ export default function MessageQueue({ Messages,retry,setMessages}: { Messages: 
                   {isEditing[index]?
                   <textarea value={message.content} onChange={(e)=>handleEdit(e,message)} className='resize-none field-sizing-content h-[100px] w-[300px] w-full  p-2 outline-none'/>:<div>{message.content}</div>}
                 <div className='opacity-0 group-hover:opacity-100  absolute right-0 -bottom-11 flex gap-1 text-gray-500 transition-opacity duration-200'>
-                  <button className='hover:bg-black/10 h-6 w-6 flex justify-center items-center rounded-sm' onClick={()=>handleCopy(message.id)}><Copy className='h-4 w-4'/></button>
+                  <button className='hover:bg-black/10 h-6 w-6 flex justify-center items-center rounded-sm' onClick={() => handleCopy(message.id,index)}>{isCopying[index] ? <Check className='h-4 w-4'/> : <Copy className='h-4 w-4'/>}</button>
                   <button
                     className='hover:bg-black/10 h-6 w-6 flex justify-center items-center rounded-sm'
                     onClick={() => handleSubmitEdit(message,index)}>
