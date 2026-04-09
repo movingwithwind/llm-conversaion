@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import PromptComposer from './PromptComposer'
 import QuestionSidebar from './QuestionSidebar'
-// import ThinkingMap from './ThinkingMap'
+import ThinkingMap from './ThinkingMap'
 import {toast} from"sonner"
 import Evocation from '../conversation/evocation'
 
@@ -17,17 +17,17 @@ function Conversation() {
           <QuestionSidebar question={lastquestion}/>
 
           <div className="min-w-0 flex-1 border-y border-slate-200 bg-white/70 lg:border-x lg:border-y-0 relative">
-            <button
+            {/* <button
               className="absolute top-4 right-4 bg-blue-500 text-white px-4 py-2 rounded"
               onClick={() => setIsConversationStarted(true)}
             >
               Start Conversation
-            </button> 
-            {/* <ThinkingMap question={question} /> */}
+            </button>  */}
+            <ThinkingMap />
             {isconversationStarted && (
               <div className='absolute inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center'>
                 <Evocation className="  bg-white text-black p-4 w-4/5 h-4/5 rounded-2xl shadow-xl p-6 border-none" onClose={() => setIsConversationStarted(false)} />
-              </div>
+              </div> 
             )}
           </div>
 

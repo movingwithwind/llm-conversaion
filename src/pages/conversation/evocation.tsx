@@ -289,7 +289,7 @@ export default function Evocation({className, onClose}: EvocationProps) {
             {Loading?'':<div className="absolute bottom-8 left-1/2 -translate-x-1/2 w-full max-w-[650px] flex flex-col overflow-hidden rounded-3xl border border-gray-300 bg-white">
             
                 {/* 文件列表 */}
-                <div className="mb-2 group pl-2 pt-2 flex flex-wrap gap-2 max-h-[120px] overflow-y-auto">
+                <div className={`mb-2 group pl-2 pt-2 flex flex-wrap gap-2 max-h-[120px] overflow-y-auto ${files ? 'block' : 'hidden'}`}>
                     {files&&files.map((file,index)=>(
                                 <div className="flex items-center gap-2 px-3 py-1.5 bg-white/80 backdrop-blur border border-gray-200 rounded  text-gray-700 hover:bg-black/10 w-[200px] h-[60px]">
                                     <div className="bg-blue-500 text-white rounded-sm w-8 h-8 flex items-center justify-center flex-shrink-0"><FileChartColumnIncreasing className="w-4 h-4" /> </div>
@@ -306,6 +306,6 @@ export default function Evocation({className, onClose}: EvocationProps) {
             </div>}
 
             {/* 隐藏文件上传input */}
-            <input type="file" className="hidden" onChange={handleFileupload} ref={fileInput} />
+            <input type="file" className="hidden" onChange={handleFileupload} ref={fileInput} multiple/>
         </div>)
 }
