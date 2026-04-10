@@ -1,13 +1,48 @@
-
-export const questionOptions = [
-  '如何提升转化率？',
-  '如何降低获客成本？',
-  '如何提升用户留存？',
-]
-
-export const historyItems = ['市场分析', '产品优化方案']
-
-
-export const recommendationItems = ['优化落地页', '改进 CTA 按钮', 'A/B 测试验证']
-
+export type BackNode={
+    id:number;
+    title: string;
+    description: string;
+}
+export type BackEdge={
+    from:number;
+    to:number;
+    condition: string;
+}
+export type NodeData = {
+  label: string;
+  description: string;
+};
+export type FrontNode={
+  id:string;
+    type?: 'thoughtNode';
+    data: NodeData;
+    position: { x: number; y: number };
+}
+export type FrontEdge={
+    id:string;
+  source:string;
+  target:string;
+    label: string;
+    type: 'smoothstep' | 'slanted';
+}
+export function NodesBackToFront(backNodes: BackNode[]): FrontNode[] {
+  return backNodes.map((node) => ({
+    id: node.id.toString(),
+    type: 'thoughtNode',
+    data: {
+      label: node.title,
+      description: node.description,
+    },
+    position: { x: 0, y: 0 },
+  }));
+}
+export function EdgesBackToFront(backEdges: BackEdge[]): FrontEdge[] {
+  return backEdges.map((edge) => ({
+    id: `${edge.from}-${edge.to}`,
+    source: edge.from.toString(),
+    target: edge.to.toString(),
+    label: edge.condition,
+    type: 'smoothstep',
+  }));
+}
 

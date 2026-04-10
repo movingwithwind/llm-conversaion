@@ -1,6 +1,8 @@
 import ReactFlow, { Background, BackgroundVariant, Controls, Handle, Position, useEdgesState, useNodesState, type NodeProps } from "reactflow"
 import "reactflow/dist/style.css";
-import { layoutGraph, type FrontEdge, type FrontNode, type NodeData } from "./dagre";
+import { layoutGraph} from "./dagre";
+import { type FrontEdge, type FrontNode,type NodeData } from "./data";
+import {  useLayoutEffect} from "react";
 const Nodes: FrontNode[] = [
   {
     id: '1775705345016',
@@ -105,6 +107,7 @@ function ThoughtNode({ data, selected }: NodeProps<NodeData>) {
           : 'border-slate-300/55 bg-white/72 shadow-[0_10px_24px_rgba(100,116,139,0.16)] hover:border-sky-300/70 hover:bg-white/85'
       }`}
     >
+      {/* 节点连接，进入节点 */}
       <Handle
         type="target"
         position={Position.Top}
@@ -121,6 +124,7 @@ function ThoughtNode({ data, selected }: NodeProps<NodeData>) {
           {data.description}
         </p>
       </div>
+      {/* 节点连接，离开节点 */}
       <Handle
         type="source"
         position={Position.Bottom}
@@ -130,13 +134,24 @@ function ThoughtNode({ data, selected }: NodeProps<NodeData>) {
   );
 }
 
-function ThinkingMap() {
+function ThinkingMap({initialnodes,initialedges,isgraphing}:{initialnodes:FrontNode[];initialedges:FrontEdge[];isgraphing:boolean}) {
   const initialGraph = layoutGraph(Nodes, Edges);
-  const [nodes, , onNodesChange] = useNodesState(initialGraph.nodes);
-  const [edges, , onEdgesChange] = useEdgesState(initialGraph.edges);
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialGraph.nodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initialGraph.edges);
+  useLayoutEffect(() => {
+    if (isgraphing) {
+      const graph = layoutGraph(initialnodes, initialedges);
+      setNodes(graph.nodes);
+      setEdges(graph.edges);
+    } else {
+      const graph = layoutGraph(Nodes, Edges);
+      setNodes(graph.nodes);
+      setEdges(graph.edges);
+    }
+  }, [initialnodes, initialedges, isgraphing, setNodes, setEdges]);
   return (
     <div className="relative h-full overflow-hidden  border border-slate-300/60 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.88),_rgba(240,245,255,0.78)_38%,_rgba(231,238,251,0.86)_100%)] p-4 md:p-8">
-      <ReactFlow
+        {isgraphing ?   <ReactFlow
         nodes={nodes}
         edges={edges}
         onNodesChange={onNodesChange}
@@ -147,19 +162,31 @@ function ThinkingMap() {
         fitViewOptions={{ padding: 0.05 }}
         minZoom={0.25}
         maxZoom={1.5}
-        proOptions={{ hideAttribution: true }}
+        proOptions={{ hideAttribution: false }}
         defaultEdgeOptions={{
           animated: true,
           style: {
             stroke: 'rgba(100,116,139,0.42)',
             strokeWidth: 1.5,
           },
+          labelStyle: {
+            fill: 'rgba(51, 65, 85, 0.95)',
+            fontSize: 12,
+            fontWeight: 600,
+          },
+          labelBgStyle: {
+            fill: 'rgba(255, 255, 255, 0.92)',
+            stroke: 'rgba(148, 163, 184, 0.45)',
+            strokeWidth: 1,
+          },
+          labelBgPadding: [8, 4],
+          labelBgBorderRadius: 8,
         }}
         className="rounded-2xl bg-transparent"
       >
-        <Background variant={BackgroundVariant.Dots} color="rgba(148,163,184,0.28)" gap={20} size={1.2} />
+        <Background variant={BackgroundVariant.Lines} color="rgba(148,163,184,0.28)" gap={20} size={1.2} />
         <Controls position="bottom-right" showInteractive={false} className="!rounded-xl !border !border-slate-300/70 !bg-white/80 !text-slate-700" />
-      </ReactFlow>
+      </ReactFlow>: <div className="flex items-center justify-center h-full text-slate-500">No graph to display</div>}
     </div>
   )
 }
