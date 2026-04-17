@@ -1,102 +1,9 @@
 import ReactFlow, { Background, BackgroundVariant, Controls, Handle, Position, useEdgesState, useNodesState, type NodeProps } from "reactflow"
 import "reactflow/dist/style.css";
 import { layoutGraph} from "./dagre";
-import { type FrontEdge, type FrontNode,type NodeData } from "./data";
-import {  useLayoutEffect} from "react";
-const Nodes: FrontNode[] = [
-  {
-    id: '1775705345016',
-    type: 'thoughtNode',
-    data: {
-      label: 'Web框架首页SEO优化方案',
-      description: '对比Next.js、React等主流框架的首页SEO提升策略',
-    },
-    position: { x: 0, y: 0 },
-  },
-  {
-    id: '1775705344608',
-    type: 'thoughtNode',
-    data: {
-      label: 'Next.js SEO策略',
-      description: '服务端渲染和预渲染优先选择',
-    },
-    position: { x: 0, y: 0 },
-  },
-  {
-    id: '1775705344648',
-    type: 'thoughtNode',
-    data: {
-      label: '动态页面优化',
-      description: 'getServerSideProps获取最新内容提升索引',
-    },
-    position: { x: 0, y: 0 },
-  },
-  {
-    id: '1775705344577',
-    type: 'thoughtNode',
-    data: {
-      label: 'React SSR/SSG优化',
-      description: '配合第三方服务解决爬虫抓取问题',
-    },
-    position: { x: 0, y: 0 },
-  },
-  {
-    id: '1775705344947',
-    type: 'thoughtNode',
-    data: {
-      label: '静态生成优化',
-      description: 'prerender-spa-plugin等工具预渲染关键页面',
-    },
-    position: { x: 0, y: 0 },
-  },
-  {
-    id: '1775705344722',
-    type: 'thoughtNode',
-    data: {
-      label: '元数据管理',
-      description: 'react-helmet-dynamic设置动态标题描述',
-    },
-    position: { x: 0, y: 0 },
-  },
-  {
-    id: '1775705344798',
-    type: 'thoughtNode',
-    data: {
-      label: 'Hybrid方案',
-      description: '结合多个框架优势互补',
-    },
-    position: { x: 0, y: 0 },
-  },
-  {
-    id: '1775705344731',
-    type: 'thoughtNode',
-    data: {
-      label: '边缘渲染部署',
-      description: 'Vercel/Cloudflare Workers加速首屏',
-    },
-    position: { x: 0, y: 0 },
-  },
-  {
-    id: '1775705344771',
-    type: 'thoughtNode',
-    data: {
-      label: 'AMP加速适配',
-      description: 'Google AMP提高移动端收录速度',
-    },
-    position: { x: 0, y: 0 },
-  },
-];
+import { type FrontEdge, type FrontNode,type NodeData,type GraphLayout } from "./data";
+import { useLayoutEffect, useMemo } from "react";
 
-const Edges: FrontEdge[] = [
-  { id: '1775705345016-1775705344608', source: '1775705345016', target: '1775705344608', label: '使用Next.js框架构建', type: 'smoothstep' },
-  { id: '1775705344608-1775705344648', source: '1775705344608', target: '1775705344648', label: '实现动态SSR', type: 'smoothstep' },
-  { id: '1775705345016-1775705344577', source: '1775705345016', target: '1775705344577', label: '使用纯React框架构建', type: 'smoothstep' },
-  { id: '1775705344577-1775705344947', source: '1775705344577', target: '1775705344947', label: '集成Prerender化', type: 'smoothstep' },
-  { id: '1775705344577-1775705344722', source: '1775705344577', target: '1775705344722', label: '配置Meta标签', type: 'smoothstep' },
-  { id: '1775705345016-1775705344798', source: '1775705345016', target: '1775705344798', label: '混合方案', type: 'smoothstep' },
-  { id: '1775705344798-1775705344731', source: '1775705344798', target: '1775705344731', label: 'CDN+边缘计算', type: 'smoothstep' },
-  { id: '1775705344798-1775705344771', source: '1775705344798', target: '1775705344771', label: 'AMP技术栈', type: 'smoothstep' },
-];
 
 function ThoughtNode({ data, selected }: NodeProps<NodeData>) {
   return (
@@ -111,7 +18,7 @@ function ThoughtNode({ data, selected }: NodeProps<NodeData>) {
       <Handle
         type="target"
         position={Position.Top}
-        className="!h-3 !w-3 !border-2 !border-white !bg-sky-400"
+        className="!absolute !left-1/2 !top-1/2 !-translate-x-1/2 !-translate-y-1/2 !h-3 !w-3 !border-2 !bg-transparent !-z-10"
       />
       <div className="space-y-2">
         <div className="flex items-center gap-2">
@@ -128,27 +35,70 @@ function ThoughtNode({ data, selected }: NodeProps<NodeData>) {
       <Handle
         type="source"
         position={Position.Bottom}
-        className="!h-3 !w-3 !border-2 !border-white !bg-indigo-400"
+        className="!absolute !left-1/2 !top-1/2 !-translate-x-1/2 !-translate-y-1/2 !h-3 !w-3 !border-2 !bg-transparent !-z-10"
       />
     </div>
   );
 }
 
-function ThinkingMap({initialnodes,initialedges,isgraphing}:{initialnodes:FrontNode[];initialedges:FrontEdge[];isgraphing:boolean}) {
-  const initialGraph = layoutGraph(Nodes, Edges);
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialGraph.nodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialGraph.edges);
-  useLayoutEffect(() => {
+function RadialNode({ data, selected }: NodeProps<NodeData>) {
+  return (
+    <div
+      className={`group relative flex h-40 w-40 flex-col items-center justify-center rounded-full border px-5 text-center backdrop-blur-md transition-all duration-200 ${
+        selected
+          ? 'border-sky-400/70 bg-white/92 shadow-[0_10px_30px_rgba(59,130,246,0.18)] ring-2 ring-sky-300/35'
+          : 'border-slate-300/55 bg-white/72 shadow-[0_10px_24px_rgba(100,116,139,0.16)] hover:border-sky-300/70 hover:bg-white/85'
+      }`}
+    >
+      <Handle
+        type="target"
+        position={Position.Left}
+        className="!absolute !left-1/2 !top-1/2 !-translate-x-1/2 !-translate-y-1/2 !h-3 !w-3 !border-2 !bg-transparent !-z-10"
+      />
+      <div className="space-y-2">
+        <div className="flex items-center justify-center gap-2">
+          <span className="inline-flex h-2.5 w-2.5 rounded-full bg-gradient-to-br from-sky-400 to-indigo-300 shadow-[0_0_14px_rgba(96,165,250,0.55)]" />
+          <h3 className="text-sm font-semibold tracking-wide text-slate-800">
+            {data.label}
+          </h3>
+        </div>
+        <div className="invisible absolute top-[110%] left-1/2 z-10  -translate-x-1/2 rounded-lg bg-white/95 p-3 text-xs leading-5 text-slate-600/95 opacity-100 shadow-[0_4px_12px_rgba(0,0,0,0.1)] ring-1 ring-slate-200 transition-all duration-200  w-[130%]
+        h-[55%] flex justify-center items-center group-hover:visible group-hover:opacity-100">
+          <p>{data.description}</p>
+        </div>
+      </div>
+      <Handle
+        type="source"
+        position={Position.Right}
+        className="!absolute !left-1/2 !top-1/2 !-translate-x-1/2 !-translate-y-1/2 !h-3 !w-3 !border-2 !bg-transparent !-z-10"
+      />
+    </div>
+  );
+}
+
+function ThinkingMap({initialnodes,initialedges,isgraphing,Layout,havinglayouted,PostMap}:{initialnodes:FrontNode[];initialedges:FrontEdge[];isgraphing:boolean,Layout:GraphLayout,havinglayouted:boolean,PostMap:(nodes:FrontNode[],edges:FrontEdge[],layout:GraphLayout)=>Promise<void>}) {
+  const [nodes, setNodes, onNodesChange] = useNodesState([] as FrontNode[]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([] as FrontEdge[]);
+  const nodeTypes = useMemo(
+    () => ({
+      thoughtNode: Layout === "Radial layout" ? RadialNode : ThoughtNode,
+    }),
+    [Layout],
+  );
+  useLayoutEffect( () => {
     if (isgraphing) {
-      const graph = layoutGraph(initialnodes, initialedges);
-      setNodes(graph.nodes);
-      setEdges(graph.edges);
+      console.log('Initial nodes:', initialnodes);
+      console.log('Initial edges:', initialedges);
+      const {nodes, edges} =havinglayouted ? layoutGraph(initialnodes, initialedges, Layout) : {nodes: initialnodes, edges: initialedges};
+      if(havinglayouted && PostMap) PostMap(nodes, edges, Layout);
+      console.log('Initial havinglayouted:', havinglayouted);
+      console.log('Layouted Graph:', {nodes, edges});
+      setNodes(nodes);
+      setEdges(edges);
     } else {
-      const graph = layoutGraph(Nodes, Edges);
-      setNodes(graph.nodes);
-      setEdges(graph.edges);
+      return
     }
-  }, [initialnodes, initialedges, isgraphing, setNodes, setEdges]);
+  }, [initialnodes, initialedges, isgraphing, Layout, setNodes, setEdges,havinglayouted,PostMap]);
   return (
     <div className="relative h-full overflow-hidden  border border-slate-300/60 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.88),_rgba(240,245,255,0.78)_38%,_rgba(231,238,251,0.86)_100%)] p-4 md:p-8">
         {isgraphing ?   <ReactFlow
@@ -156,7 +106,7 @@ function ThinkingMap({initialnodes,initialedges,isgraphing}:{initialnodes:FrontN
         edges={edges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
-        nodeTypes={{ thoughtNode: ThoughtNode }}
+        nodeTypes={nodeTypes}
         nodeOrigin={[0.5, 0.5]}
         fitView
         fitViewOptions={{ padding: 0.05 }}

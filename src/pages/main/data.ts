@@ -23,8 +23,14 @@ export type FrontEdge={
   source:string;
   target:string;
     label: string;
-    type: 'smoothstep' | 'slanted';
+    type: 'smoothstep' | 'straight';
 }
+export type Map={
+    id:number;
+    question:string;
+}  
+
+export type GraphLayout= "Radial layout"| "Hierarchical layout"
 export function NodesBackToFront(backNodes: BackNode[]): FrontNode[] {
   return backNodes.map((node) => ({
     id: node.id.toString(),
@@ -36,13 +42,14 @@ export function NodesBackToFront(backNodes: BackNode[]): FrontNode[] {
     position: { x: 0, y: 0 },
   }));
 }
+
 export function EdgesBackToFront(backEdges: BackEdge[]): FrontEdge[] {
   return backEdges.map((edge) => ({
     id: `${edge.from}-${edge.to}`,
     source: edge.from.toString(),
     target: edge.to.toString(),
     label: edge.condition,
-    type: 'smoothstep',
+    type: 'straight',
   }));
 }
 
