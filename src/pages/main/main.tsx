@@ -51,6 +51,7 @@ function Conversation() {
             setIsGraphing(false)
             setLastQuestion(question)
             setQuestion('')
+            setActiveMapId(null);
             Forgraph(question)
             toast.success(`Question sent: ${question}`)
           }
