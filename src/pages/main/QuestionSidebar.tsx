@@ -7,7 +7,7 @@ function SectionTitle({ title }: { title: string }) {
   return <h3 className="text-sm font-semibold text-slate-700">{title}</h3>
 }
 
-function QuestionSidebar({ question, Maps,getgraph,avtivemapId }: { question: string; Maps: Map[]; getgraph: (id:number) => void; avtivemapId: number | null }) {
+function QuestionSidebar({ question, Maps,GetGraph,DeleteMap,avtivemapId }: { question: string; Maps: Map[]; GetGraph: (id:number) => void; DeleteMap: (id:number) => void; avtivemapId: number | null }) {
   const safeMaps = Array.isArray(Maps) ? Maps : []
 
   return (
@@ -29,11 +29,14 @@ function QuestionSidebar({ question, Maps,getgraph,avtivemapId }: { question: st
             <Clock className="w-4 h-4 text-slate-500" />
           </div>
           <div className="space-y-2 max-h-64 overflow-y-auto pr-2">
-            {safeMaps.map((item) => (
-              <div
-                key={item.id}
-                onClick={() => getgraph(item.id)}
-                className={`group p-2 rounded-md bg-slate-50 border border-slate-200 hover:bg-blue-50 hover:border-blue-300 cursor-pointer transition-all ${avtivemapId === item.id ? '!bg-blue-100 !border-blue-300' : ''}`}
+            {safeMaps.length === 0 ? (
+              <p className="text-sm text-slate-500">No history available</p>
+            ) : (
+              safeMaps.map((item) => (
+                <div
+                  key={item.id}
+                  onClick={() => GetGraph(item.id)}
+                  className={`group p-2 rounded-md bg-slate-50 border border-slate-200 hover:bg-blue-50 hover:border-blue-300 cursor-pointer transition-all ${avtivemapId === item.id ? '!bg-blue-100 !border-blue-300' : ''}`}
               >
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
@@ -44,12 +47,17 @@ function QuestionSidebar({ question, Maps,getgraph,avtivemapId }: { question: st
                   </div>
                   <button 
                     className="flex-shrink-0 opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-red-500 transition-all"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      DeleteMap(item.id);
+                    }}
                   >
+
                     <Trash2 className="w-3 h-3" />
                   </button>
                 </div>
               </div>
-            ))}
+            )))}
           </div>
         </div>
       </div>

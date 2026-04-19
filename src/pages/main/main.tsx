@@ -56,7 +56,7 @@ function Conversation() {
             toast.success(`Question sent: ${question}`)
           }
 
-  const GetLastquestions=async()=>{
+  const GetMaps=async()=>{
     try{
       const response = await fetch('/api/map')
       if (!response.ok) {        throw new Error(`Server error: ${response.statusText}`);
@@ -88,6 +88,28 @@ function Conversation() {
     }
   }
 
+  const DeleteMap=async(id:number)=>{
+    try{
+      const response = await fetch(`/api/map/?id=${id}`,{
+        method:'DELETE'
+      })
+      if (!response.ok) {
+        throw new Error(`Server error: ${response.statusText}`);
+      }
+      const data=await response.json();
+      await GetMaps();
+      if(activeMapId===id){
+        setNodes([]);
+        setEdges([]);
+        setActiveMapId(null);
+      }
+      toast.success(data.message);
+    } catch (error) {
+      console.error('Error deleting map:', error);
+      toast.error('Failed to delete map. Please try again later.');
+    }
+  }
+
   const PostMap=useCallback(async(nodes:FrontNode[],edges:FrontEdge[],layout:GraphLayout)=>{
     try{
       const response = await fetch('/api/map', {
@@ -100,7 +122,7 @@ function Conversation() {
       }
       const data = await response.json();
       setActiveMapId(data.mapId);
-      GetLastquestions();
+      GetMaps();
       console.log(data);
       toast.success('Graph saved successfully!');
     }catch(error){
@@ -111,7 +133,7 @@ function Conversation() {
 
 
   useEffect(() => {
-    GetLastquestions()
+    GetMaps()
   }, [])
 
   return (
@@ -119,7 +141,7 @@ function Conversation() {
       <main className="mx-auto flex w-full flex-1 flex-col overflow-hidden shadow-2xl">
 
         <section className="flex min-h-[620px] flex-1 flex-col lg:flex-row">
-          <QuestionSidebar question={lastquestion} Maps={Maps} getgraph={GetGraph} avtivemapId={activeMapId} />
+          <QuestionSidebar question={lastquestion} Maps={Maps} GetGraph={GetGraph} avtivemapId={activeMapId} DeleteMap={DeleteMap}/>
 
           <div className="min-w-0 flex-1 border-y border-slate-200 bg-white/70 lg:border-x lg:border-y-0 relative">
             {/* <button
@@ -128,7 +150,7 @@ function Conversation() {
             >
               Start Conversation
             </button>  */}
-            <ThinkingMap initialnodes={nodes} initialedges={edges} isgraphing={isGraphing} Layout={Layout} havinglayouted={havinglayouted} PostMap={PostMap} />
+            <ThinkingMap initialnodes={nodes} initialedges={edges} isgraphing={isGraphing} Layout={Layout} havinglayouted={havinglayouted} PostMap={PostMap}  />
             {isconversationStarted && (
               <div className='absolute inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center'>
                 <Evocation className="  bg-white text-black p-4 w-4/5 h-4/5 rounded-2xl shadow-xl p-6 border-none" onClose={() => setIsConversationStarted(false)} />
