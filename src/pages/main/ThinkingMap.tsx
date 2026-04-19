@@ -2,25 +2,79 @@ import ReactFlow, { Background, BackgroundVariant, Controls, Handle, Position, u
 import "reactflow/dist/style.css";
 import { layoutGraph} from "./dagre";
 import { type FrontEdge, type FrontNode,type NodeData,type GraphLayout } from "./data";
-import { useLayoutEffect, useMemo } from "react";
+import { useLayoutEffect, useMemo, type Dispatch, type SetStateAction } from "react";
 
 
-function ThoughtNode({ data, selected }: NodeProps<NodeData>) {
+function SelectNodeButton({
+  node,
+  selectedNodes,
+  setSelectedNodes,
+}: {
+  node: FrontNode;
+  selectedNodes: FrontNode[];
+  setSelectedNodes: Dispatch<SetStateAction<FrontNode[]>>;
+}) {
+  const isSelected = selectedNodes.some((selectedNode) => selectedNode.id === node.id);
+
+  return (
+    <button
+      type="button"
+      className={`absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full border transition-all duration-200 ${
+        isSelected
+          ? 'border-sky-500 bg-sky-500 text-white shadow-[0_0_0_4px_rgba(14,165,233,0.12)]'
+          : 'border-slate-300 bg-white/90 text-slate-400 hover:border-sky-400 hover:text-sky-500'
+      }`}
+      onPointerDown={(event) => event.stopPropagation()}
+      onMouseDown={(event) => event.stopPropagation()}
+      onClick={(event) => {
+        event.stopPropagation();
+        setSelectedNodes((currentNodes) => {
+          if (currentNodes.some((selectedNode) => selectedNode.id === node.id)) {
+            return currentNodes.filter((selectedNode) => selectedNode.id !== node.id);
+          }
+
+          return [...currentNodes, node];
+        });
+      }}
+    >
+      <span
+        className={`block h-2.5 w-2.5 rounded-full border transition-all duration-200 ${
+          isSelected ? 'border-white bg-white' : 'border-current bg-transparent'
+        }`}
+      />
+    </button>
+  );
+}
+
+type SelectableNodeProps = NodeProps<NodeData> & {
+  selectedNodes: FrontNode[];
+  setSelectedNodes: Dispatch<SetStateAction<FrontNode[]>>;
+};
+
+function ThoughtNode({ id, data, selected, selectedNodes, setSelectedNodes }: SelectableNodeProps) {
+  const node = {
+    id,
+    type: 'thoughtNode',
+    data,
+    position: { x: 0, y: 0 },
+  } as FrontNode;
+
   return (
     <div
-      className={`min-w-[100px] max-w-[240px] rounded-2xl border px-4 py-3 backdrop-blur-md transition-all duration-200 ${
+      className={`relative min-w-[100px] max-w-[240px] rounded-2xl border px-4 py-3 backdrop-blur-md transition-all duration-200 ${
         selected
           ? 'border-sky-400/70 bg-white/92 shadow-[0_10px_30px_rgba(59,130,246,0.18)] ring-2 ring-sky-300/35'
           : 'border-slate-300/55 bg-white/72 shadow-[0_10px_24px_rgba(100,116,139,0.16)] hover:border-sky-300/70 hover:bg-white/85'
       }`}
     >
+      <SelectNodeButton node={node} selectedNodes={selectedNodes} setSelectedNodes={setSelectedNodes} />
       {/* 节点连接，进入节点 */}
       <Handle
         type="target"
         position={Position.Top}
         className="!absolute !left-1/2 !top-1/2 !-translate-x-1/2 !-translate-y-1/2 !h-3 !w-3 !border-2 !bg-transparent !-z-10"
       />
-      <div className="space-y-2">
+      <div className="space-y-2 pr-8">
         <div className="flex items-center gap-2">
           <span className="inline-flex h-2.5 w-2.5 rounded-full bg-gradient-to-br from-sky-400 to-indigo-300 shadow-[0_0_14px_rgba(96,165,250,0.55)]" />
           <h3 className="text-sm font-semibold tracking-wide text-slate-800">
@@ -41,7 +95,14 @@ function ThoughtNode({ data, selected }: NodeProps<NodeData>) {
   );
 }
 
-function RadialNode({ data, selected }: NodeProps<NodeData>) {
+function RadialNode({ id, data, selected, selectedNodes, setSelectedNodes }: SelectableNodeProps) {
+  const node = {
+    id,
+    type: 'thoughtNode',
+    data,
+    position: { x: 0, y: 0 },
+  } as FrontNode;
+
   return (
     <div
       className={`group relative flex h-40 w-40 flex-col items-center justify-center rounded-full border px-5 text-center backdrop-blur-md transition-all duration-200 ${
@@ -67,6 +128,7 @@ function RadialNode({ data, selected }: NodeProps<NodeData>) {
           <p>{data.description}</p>
         </div>
       </div>
+      <SelectNodeButton node={node} selectedNodes={selectedNodes} setSelectedNodes={setSelectedNodes} />
       <Handle
         type="source"
         position={Position.Right}
@@ -76,14 +138,19 @@ function RadialNode({ data, selected }: NodeProps<NodeData>) {
   );
 }
 
-function ThinkingMap({initialnodes,initialedges,isgraphing,Layout,havinglayouted,PostMap}:{initialnodes:FrontNode[];initialedges:FrontEdge[];isgraphing:boolean,Layout:GraphLayout,havinglayouted:boolean,PostMap:(nodes:FrontNode[],edges:FrontEdge[],layout:GraphLayout)=>Promise<void>}) {
+function ThinkingMap({initialnodes,initialedges,isgraphing,Layout,havinglayouted,PostMap,selectedNodes,setSelectedNodes}:{initialnodes:FrontNode[];initialedges:FrontEdge[];isgraphing:boolean,Layout:GraphLayout,havinglayouted:boolean,PostMap:(nodes:FrontNode[],edges:FrontEdge[],layout:GraphLayout)=>Promise<void>,selectedNodes:FrontNode[],setSelectedNodes:Dispatch<SetStateAction<FrontNode[]>>}) {
   const [nodes, setNodes, onNodesChange] = useNodesState([] as FrontNode[]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([] as FrontEdge[]);
   const nodeTypes = useMemo(
     () => ({
-      thoughtNode: Layout === "Radial layout" ? RadialNode : ThoughtNode,
+      thoughtNode: (props: NodeProps<NodeData>) =>
+        Layout === "Radial layout" ? (
+          <RadialNode {...props} selectedNodes={selectedNodes} setSelectedNodes={setSelectedNodes} />
+        ) : (
+          <ThoughtNode {...props} selectedNodes={selectedNodes} setSelectedNodes={setSelectedNodes} />
+        ),
     }),
-    [Layout],
+    [Layout, selectedNodes, setSelectedNodes],
   );
   useLayoutEffect( () => {
     if (isgraphing) {

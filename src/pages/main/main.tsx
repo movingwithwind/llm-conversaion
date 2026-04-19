@@ -17,9 +17,11 @@ function Conversation() {
   const [isGraphing, setIsGraphing] = useState(false);
   const [Maps, setMaps] = useState<Map[]>([])
   const [activeMapId, setActiveMapId] = useState<number | null>(null);
+  const [selectedNodes, setSelectedNodes] = useState<FrontNode[]>([]);
 
   const Forgraph=async (message:string)=>{
     try{
+      setSelectedNodes([]);
       const response = await fetch('/api/graph', {
         method: 'POST',
         headers: {  'Content-Type': 'application/json' },
@@ -48,6 +50,7 @@ function Conversation() {
   }
  
   const handleSend = () => {
+            setSelectedNodes([])
             setIsGraphing(false)
             setLastQuestion(question)
             setQuestion('')
@@ -71,6 +74,7 @@ function Conversation() {
 
   const GetGraph=async(id:number)=>{
     try{
+      setSelectedNodes([]);
       const response = await fetch(`/api/graph/?id=${id}`)
       if (!response.ok) {
         throw new Error(`Server error: ${response.statusText}`);
@@ -90,6 +94,7 @@ function Conversation() {
 
   const DeleteMap=async(id:number)=>{
     try{
+      setSelectedNodes([]);
       const response = await fetch(`/api/map/?id=${id}`,{
         method:'DELETE'
       })
@@ -141,7 +146,7 @@ function Conversation() {
       <main className="mx-auto flex w-full flex-1 flex-col overflow-hidden shadow-2xl">
 
         <section className="flex min-h-[620px] flex-1 flex-col lg:flex-row">
-          <QuestionSidebar question={lastquestion} Maps={Maps} GetGraph={GetGraph} avtivemapId={activeMapId} DeleteMap={DeleteMap}/>
+          <QuestionSidebar question={lastquestion} Maps={Maps} GetGraph={GetGraph} avtivemapId={activeMapId} DeleteMap={DeleteMap} selectedNodes={selectedNodes} setSelectedNodes={setSelectedNodes}/>
 
           <div className="min-w-0 flex-1 border-y border-slate-200 bg-white/70 lg:border-x lg:border-y-0 relative">
             {/* <button
@@ -150,7 +155,7 @@ function Conversation() {
             >
               Start Conversation
             </button>  */}
-            <ThinkingMap initialnodes={nodes} initialedges={edges} isgraphing={isGraphing} Layout={Layout} havinglayouted={havinglayouted} PostMap={PostMap}  />
+            <ThinkingMap initialnodes={nodes} initialedges={edges} isgraphing={isGraphing} Layout={Layout} havinglayouted={havinglayouted} PostMap={PostMap} selectedNodes={selectedNodes} setSelectedNodes={setSelectedNodes}  />
             {isconversationStarted && (
               <div className='absolute inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center'>
                 <Evocation className="  bg-white text-black p-4 w-4/5 h-4/5 rounded-2xl shadow-xl p-6 border-none" onClose={() => setIsConversationStarted(false)} />
