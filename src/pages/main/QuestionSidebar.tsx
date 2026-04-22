@@ -7,7 +7,7 @@ function SectionTitle({ title }: { title: string }) {
   return <h3 className="text-sm font-semibold text-slate-700">{title}</h3>
 }
 
-function QuestionSidebar({ question, Maps,GetGraph,DeleteMap,avtivemapId, selectedNodes, setSelectedNodes }: { question: string; Maps: Map[]; GetGraph: (id:number) => void; DeleteMap: (id:number) => void; avtivemapId: number | null; selectedNodes: FrontNode[]; setSelectedNodes: React.Dispatch<React.SetStateAction<FrontNode[]>> }) {
+function QuestionSidebar({ question, Maps,GetGraph,DeleteMap,avtivemapId, selectedNodes, setSelectedNodes, startConversation }: { question: string; Maps: Map[]; GetGraph: (id:number) => void; DeleteMap: (id:number) => void; avtivemapId: number | null; selectedNodes: FrontNode[]; setSelectedNodes: React.Dispatch<React.SetStateAction<FrontNode[]>>; startConversation: () => void }) {
   const safeMaps = Array.isArray(Maps) ? Maps : []
 
   return (
@@ -78,7 +78,7 @@ function QuestionSidebar({ question, Maps,GetGraph,DeleteMap,avtivemapId, select
                 ))
               )}
             </div>
-            <button className="w-full mt-2 bg-blue-400 text-white px-2 py-2 rounded mt-auto">
+            <button className="w-full mt-2 bg-blue-400 text-white px-2 py-2 rounded mt-auto" onClick={startConversation}>
               Start Conversation
             </button>
           </div>

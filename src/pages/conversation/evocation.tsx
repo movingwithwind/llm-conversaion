@@ -6,11 +6,13 @@ import { FileChartColumnIncreasing } from 'lucide-react';
 import { useFileDrop } from "./useFileDrop";
 import { SUPPORTED_MIME_TYPES } from "../../compents/FileType";
 import {  Loader } from 'lucide-react';
+import { type FrontNode } from "../main/data";
 import { createParser } from 'eventsource-parser';
 
 type EvocationProps = {
     className?: string;
     onClose: () => void;
+    selectedNodes: FrontNode[];
 }
 type Message = {
     id: number;
@@ -57,7 +59,7 @@ function isDoneData(value: unknown): value is DoneData {
 }
 
 
-export default function Evocation({className, onClose}: EvocationProps) {
+export default function Evocation({className, onClose, selectedNodes}: EvocationProps) {
     const {isDragging,bind,handleDrop}=useFileDrop();
 
     const [question, setQuestion] = useState('');
@@ -185,10 +187,13 @@ export default function Evocation({className, onClose}: EvocationProps) {
         ]);
 
         try {
+            const node_ids = selectedNodes.map(node => node.id);
             formData.append('message', question);
             formData.append('id','1');
             formData.append('client_user_id', userCliendId);
             formData.append('client_assistant_id', assistantCliendId);
+            formData.append('node_ids', node_ids.join(','));
+
             if(files) {
                 for(const file of files) {
                     formData.append('file', file);
@@ -246,8 +251,16 @@ export default function Evocation({className, onClose}: EvocationProps) {
             setIsAnswering(false);
         }
     }
-    async function fetchmessages(id:string){
-        const response = await fetch(`/api/chat?id=${id}`, {
+    async function fetchmessages(){
+        let Url=`/api/chat?`;
+        if(selectedNodes.length>0){
+            selectedNodes.forEach(node=>{
+                Url+=`ids=${node.id}&`;
+            });
+        }else{
+            throw new Error('No selected nodes to fetch messages for');
+        }
+        const response = await fetch(Url, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
@@ -255,12 +268,12 @@ export default function Evocation({className, onClose}: EvocationProps) {
         });
         const data = await response.json() ;
         if(!response.ok) throw new Error(`Network response was not ok,${data.message}`);
-        setMessages(data.map((item:backMessage) =>({...item,cliendId:`${item.role}-${Date.now()}-${item.id}` })));
+        setMessages(data.messages.map((item:backMessage) =>({...item,cliendId:`${item.role}-${Date.now()}-${item.id}` })));
         setLoading(false);
     }
     useEffect(()=>{
         try{
-        fetchmessages("1");
+        fetchmessages();
         }catch(error){
             toast.error(`Failed to fetch messages: ${(error as Error).message}`);
         }
