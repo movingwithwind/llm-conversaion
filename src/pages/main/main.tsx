@@ -80,7 +80,11 @@ function Conversation() {
         throw new Error(`Server error: ${response.statusText}`);
       }
       const data = await response.json();
-      setNodes(data.map.nodes);
+      const nodes =data.map.nodes.map((node:BackNode) => ({
+        ...node,
+        message_count: node._count.message_links,
+      }));
+      setNodes(nodes);
       setEdges(data.map.edges);
       setLayout(data.map.layout);
       setActiveMapId(id);

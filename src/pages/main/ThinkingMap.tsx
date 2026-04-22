@@ -49,12 +49,18 @@ function SelectNodeButton({
 type SelectableNodeProps = NodeProps<NodeData> & {
   selectedNodes: FrontNode[];
   setSelectedNodes: Dispatch<SetStateAction<FrontNode[]>>;
+  messageCount?: number;
 };
 
-function ThoughtNode({ id, data, selected, selectedNodes, setSelectedNodes }: SelectableNodeProps) {
+function formatMessageCount(count: number): string {
+  return count/2 > 99 ? '99+' : String(count/2);
+}
+
+function ThoughtNode({ id, data, selected, selectedNodes, setSelectedNodes, messageCount }: SelectableNodeProps) {
   const node = {
     id,
     type: 'thoughtNode',
+    message_count: messageCount,
     data,
     position: { x: 0, y: 0 },
   } as FrontNode;
@@ -67,6 +73,11 @@ function ThoughtNode({ id, data, selected, selectedNodes, setSelectedNodes }: Se
           : 'border-slate-300/55 bg-white/72 shadow-[0_10px_24px_rgba(100,116,139,0.16)] hover:border-sky-300/70 hover:bg-white/85'
       }`}
     >
+      {typeof messageCount === 'number' && messageCount > 0 && (
+        <div className="absolute -left-1 -top-1 min-w-4 h-4 rounded-full bg-red-500 px-1 text-center text-[10px] font-semibold leading-none text-white shadow-sm flex items-center justify-center">
+          {formatMessageCount(messageCount)}
+        </div>
+      )}
       <SelectNodeButton node={node} selectedNodes={selectedNodes} setSelectedNodes={setSelectedNodes} />
       {/* 节点连接，进入节点 */}
       <Handle
@@ -95,10 +106,11 @@ function ThoughtNode({ id, data, selected, selectedNodes, setSelectedNodes }: Se
   );
 }
 
-function RadialNode({ id, data, selected, selectedNodes, setSelectedNodes }: SelectableNodeProps) {
+function RadialNode({ id, data, selected, selectedNodes, setSelectedNodes, messageCount }: SelectableNodeProps) {
   const node = {
     id,
     type: 'thoughtNode',
+    message_count: messageCount,
     data,
     position: { x: 0, y: 0 },
   } as FrontNode;
@@ -111,6 +123,11 @@ function RadialNode({ id, data, selected, selectedNodes, setSelectedNodes }: Sel
           : 'border-slate-300/55 bg-white/72 shadow-[0_10px_24px_rgba(100,116,139,0.16)] hover:border-sky-300/70 hover:bg-white/85'
       }`}
     >
+      {typeof messageCount === 'number' && messageCount > 0 && (
+        <div className="absolute -left-1 -top-1 min-w-4 h-4 rounded-full bg-red-500 px-1 text-center text-[10px] font-semibold leading-none text-white shadow-sm flex items-center justify-center">
+          {formatMessageCount(messageCount)}
+        </div>
+      )}
       <Handle
         type="target"
         position={Position.Left}
@@ -141,16 +158,33 @@ function RadialNode({ id, data, selected, selectedNodes, setSelectedNodes }: Sel
 function ThinkingMap({initialnodes,initialedges,isgraphing,Layout,havinglayouted,PostMap,selectedNodes,setSelectedNodes}:{initialnodes:FrontNode[];initialedges:FrontEdge[];isgraphing:boolean,Layout:GraphLayout,havinglayouted:boolean,PostMap:(nodes:FrontNode[],edges:FrontEdge[],layout:GraphLayout)=>Promise<void>,selectedNodes:FrontNode[],setSelectedNodes:Dispatch<SetStateAction<FrontNode[]>>}) {
   const [nodes, setNodes, onNodesChange] = useNodesState([] as FrontNode[]);
   const [edges, setEdges, onEdgesChange] = useEdgesState([] as FrontEdge[]);
+  const messageCountMap = useMemo(() => {
+    const map = new Map<string, number | undefined>();
+    initialnodes.forEach((node) => {
+      map.set(node.id, node.message_count);
+    });
+    return map;
+  }, [initialnodes]);
   const nodeTypes = useMemo(
     () => ({
       thoughtNode: (props: NodeProps<NodeData>) =>
         Layout === "Radial layout" ? (
-          <RadialNode {...props} selectedNodes={selectedNodes} setSelectedNodes={setSelectedNodes} />
+          <RadialNode
+            {...props}
+            selectedNodes={selectedNodes}
+            setSelectedNodes={setSelectedNodes}
+            messageCount={messageCountMap.get(props.id)}
+          />
         ) : (
-          <ThoughtNode {...props} selectedNodes={selectedNodes} setSelectedNodes={setSelectedNodes} />
+          <ThoughtNode
+            {...props}
+            selectedNodes={selectedNodes}
+            setSelectedNodes={setSelectedNodes}
+            messageCount={messageCountMap.get(props.id)}
+          />
         ),
     }),
-    [Layout, selectedNodes, setSelectedNodes],
+    [Layout, selectedNodes, setSelectedNodes, messageCountMap],
   );
   useLayoutEffect( () => {
     if (isgraphing) {

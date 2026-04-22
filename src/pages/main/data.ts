@@ -2,6 +2,9 @@ export type BackNode={
     id:number;
     title: string;
     description: string;
+    _count: {
+        message_links: number;
+    }
 }
 export type BackEdge={
     from:number;
@@ -14,6 +17,7 @@ export type NodeData = {
 };
 export type FrontNode={
   id:string;
+    message_count?: number;
     type?: 'thoughtNode';
     data: NodeData;
     position: { x: number; y: number };
