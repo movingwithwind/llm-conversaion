@@ -145,6 +145,10 @@ function Conversation() {
     GetMaps()
   }, [])
 
+  useEffect(() => {
+    if (!isconversationStarted&&activeMapId) GetGraph(activeMapId)
+  }, [isconversationStarted,activeMapId])
+
   return (
     <div className="flex min-h-screen bg-[linear-gradient(160deg,#d7deee_0%,#e8edf8_35%,#dae2f3_100%)] ">
       <main className="mx-auto flex w-full flex-1 flex-col overflow-hidden shadow-2xl">
