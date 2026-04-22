@@ -20,6 +20,7 @@ type Message = {
     parent_id: number | null;
     role: 'user' | 'assistant';
     content: string;
+    nodeLabels?: string[];
 };
 
 type backMessage = {
@@ -27,6 +28,13 @@ type backMessage = {
     parent_id: number | null;
     role: 'user' | 'assistant';
     content: string;
+    node_links?: Array<{
+        node?: {
+            data?: {
+                label?: string;
+            };
+        };
+    }>;
 };
 
 type DoneData = {
@@ -63,6 +71,7 @@ export default function Evocation({className, onClose, selectedNodes}: Evocation
     const {isDragging,bind,handleDrop}=useFileDrop();
 
     const [question, setQuestion] = useState('');
+    const [includeBackgroundInfo, setIncludeBackgroundInfo] = useState(true);
     const [Loading, setLoading]=useState(true);
     const [files, setFiles] = useState<File[] | null>(null);
     const [isAnswering, setIsAnswering] = useState(false);
@@ -182,8 +191,22 @@ export default function Evocation({className, onClose, selectedNodes}: Evocation
         const assistantCliendId = `assistant-${Date.now()}-${assistantId}`;
         setMessages(prev => [
             ...prev,
-            { id: userId, role: 'user', content: question, cliendId: userCliendId, parent_id: null },
-            { id: assistantId, role: 'assistant', content: '', cliendId: assistantCliendId, parent_id: userId },
+            {
+                id: userId,
+                role: 'user',
+                content: question,
+                cliendId: userCliendId,
+                parent_id: null,
+                nodeLabels: selectedNodes.map(node => node.data.label),
+            },
+            {
+                id: assistantId,
+                role: 'assistant',
+                content: '',
+                cliendId: assistantCliendId,
+                parent_id: userId,
+                nodeLabels: selectedNodes.map(node => node.data.label),
+            },
         ]);
 
         try {
@@ -193,6 +216,7 @@ export default function Evocation({className, onClose, selectedNodes}: Evocation
             formData.append('client_user_id', userCliendId);
             formData.append('client_assistant_id', assistantCliendId);
             formData.append('node_ids', node_ids.join(','));
+            formData.append('include_background_info', includeBackgroundInfo ? '1' : '0');
 
             if(files) {
                 for(const file of files) {
@@ -268,7 +292,18 @@ export default function Evocation({className, onClose, selectedNodes}: Evocation
         });
         const data = await response.json() ;
         if(!response.ok) throw new Error(`Network response was not ok,${data.message}`);
-        setMessages(data.messages.map((item:backMessage) =>({...item,cliendId:`${item.role}-${Date.now()}-${item.id}` })));
+        setMessages(
+            data.messages.map((item: backMessage) => ({
+                id: item.id,
+                parent_id: item.parent_id,
+                role: item.role,
+                content: item.content,
+                cliendId: `${item.role}-${Date.now()}-${item.id}`,
+                nodeLabels: (item.node_links ?? [])
+                    .map((link) => link.node?.data?.label)
+                    .filter((label): label is string => Boolean(label)),//is实现类型收窄
+            }))
+        );
         setLoading(false);
     }
     useEffect(()=>{
@@ -280,6 +315,20 @@ export default function Evocation({className, onClose, selectedNodes}: Evocation
     },[])
     return (
         <div className={`${className} relative overflow-hidden ${Loading ? 'animate-pulse' : ''}`} {...bind} onDrop={handleFileDrop}>
+            {/* 背景信息部分 */}
+            <div className="absolute bottom-1 left-15 z-20  -translate-x-1/2  border-gray-200 bg-transparent ">
+                <label className="mt-2 flex items-center gap-2 text-xs text-gray-600 select-none">
+                    <span>加入背景图信息</span>                   
+                    <input
+                        type="checkbox"
+                        checked={includeBackgroundInfo}
+                        onChange={(e) => setIncludeBackgroundInfo(e.target.checked)}
+                        className="h-4 w-4 cursor-pointer rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+
+                </label>
+            </div>
+
             {/*文件拖拽部分  */}
             {isDragging && (
             <div className="absolute inset-0 z-50 bg-black/10 backdrop-blur-sm flex items-center justify-center rounded-xl">

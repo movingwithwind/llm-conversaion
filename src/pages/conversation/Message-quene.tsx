@@ -13,6 +13,7 @@ type Message = {
     parent_id: number | null;
     role: 'user' | 'assistant';
     content: string;
+  nodeLabels?: string[];
 };
 
 export default function MessageQueue({ Messages,retry,setMessages}: { Messages: Message[],retry:(node_id:number,message_id:number,role:"user"|"assistant",message?:string)=>void,setMessages:React.Dispatch<React.SetStateAction<Message[]>>}) {
@@ -50,11 +51,20 @@ export default function MessageQueue({ Messages,retry,setMessages}: { Messages: 
         {Messages.map((message, index) => (
           <div
             key={message.cliendId}
-            className={'p-4 rounded-lg mb-2 max-w-[85%] ' + (message.role === 'user' ? 'group bg-black/10 self-end' : ' self-start')}
+            className={'p-4 rounded-lg mb-2 max-w-[85%] ' + (message.role === 'user' ? 'group bg-blue-300 self-end' : ' self-start')}
             ref={(el) => (el && (messageRefs.current[message.id] = el), undefined)}>
 
             {message.role === 'assistant' ? (
               <div className='prose prose-sm max-w-none' id={`message-${message.cliendId}`}>
+                {message.nodeLabels && message.nodeLabels.length > 0 && (
+                  <div className='mb-2 flex flex-wrap gap-1 not-prose'>
+                    {message.nodeLabels.map((label) => (
+                      <span key={`${message.id}-${label}`} className='rounded-full border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-[11px] text-emerald-700'>
+                        {label}
+                      </span>
+                    ))}
+                  </div>
+                )}
                 <ReactMarkdown
                   remarkPlugins={[remarkGfm]}
                   rehypePlugins={[[rehypeHighlight, { ignoreMissing: true }]]}
@@ -72,9 +82,9 @@ export default function MessageQueue({ Messages,retry,setMessages}: { Messages: 
                   {isEditing[index]?
                   <textarea value={message.content} onChange={(e)=>handleEdit(e,message)} className='resize-none field-sizing-content h-[100px] w-[300px] w-full  p-2 outline-none'/>:<div>{message.content}</div>}
                 <div className='opacity-0 group-hover:opacity-100  absolute right-0 -bottom-11 flex gap-1 text-gray-500 transition-opacity duration-200'>
-                  <button className='hover:bg-black/10 h-6 w-6 flex justify-center items-center rounded-sm' onClick={() => handleCopy(message.id,index)}>{isCopying[index] ? <Check className='h-4 w-4'/> : <Copy className='h-4 w-4'/>}</button>
+                  <button className='hover:bg-blue-300 h-6 w-6 flex justify-center items-center rounded-sm' onClick={() => handleCopy(message.id,index)}>{isCopying[index] ? <Check className='h-4 w-4'/> : <Copy className='h-4 w-4'/>}</button>
                   <button
-                    className='hover:bg-black/10 h-6 w-6 flex justify-center items-center rounded-sm'
+                    className='hover:bg-blue-300 h-6 w-6 flex justify-center items-center rounded-sm'
                     onClick={() => handleSubmitEdit(message,index)}>
                     {isEditing[index] ? <Check className='h-4 w-4'/> : <PencilLine className='h-4 w-4'/>}
                   </button>
