@@ -76,8 +76,26 @@ export default function Evocation({className, onClose, selectedNodes}: Evocation
     const [files, setFiles] = useState<File[] | null>(null);
     const [isAnswering, setIsAnswering] = useState(false);
     const [Messages, setMessages] = useState<Message[]>([])
-    const formData = new FormData();
     const fileInput = useRef<HTMLInputElement>(null);
+
+    const activeControllerRef = useRef<AbortController | null>(null);
+    const activeReaderRef = useRef<ReadableStreamDefaultReader<Uint8Array> | null>(null);
+
+
+    function abortCurrentRequest() {
+            if (activeControllerRef.current) {
+                activeControllerRef.current.abort();
+                console.log('Aborting current request', activeControllerRef.current);
+                activeControllerRef.current = null;
+            }
+            if (activeReaderRef.current) {
+                activeReaderRef.current.cancel().catch(() => {});
+                console.log('Cancelling current reader', activeReaderRef.current);
+                activeReaderRef.current = null;
+            }
+            console.log('Current request aborted');
+        }
+
 
     function updateAssistantMessageById(assistantId: number, content: string) {
         setMessages(prev => prev.map(message => {
@@ -88,9 +106,10 @@ export default function Evocation({className, onClose, selectedNodes}: Evocation
         }));
     }
 
-    async function readSseAnswerStream(response: Response, assistantId: number) {
+    async function readSseAnswerStream(response: Response, assistantId: number,signal: AbortSignal) {
         if (!response.body) throw new Error('Response body is empty');
         const reader = response.body.getReader();
+        activeReaderRef.current = reader;
         const decoder = new TextDecoder();
         let assistantMessageText = '';
         let done = false;
@@ -145,15 +164,25 @@ export default function Evocation({className, onClose, selectedNodes}: Evocation
                     throw new Error('Failed to parse SSE data');
                 }
         }});
-        while(!done) {
-            const { value, done } = await reader.read();
-            if(done) break;
-            if(!value) continue;
-            parser.feed(decoder.decode(value, { stream: true }));
-            console.log('Received chunk:', decoder.decode(value, { stream: true }));
-        }
-        parser.feed(decoder.decode());
+        try {
+            while(!done) {
+                if (signal.aborted) {
+                    await reader.cancel().catch(() => {});
+                    throw new DOMException("Aborted", "AbortError");
+                }
 
+                const { value, done } = await reader.read();
+                if(done) break;
+                if(!value) continue;
+                parser.feed(decoder.decode(value, { stream: true }));
+                console.log('Received chunk:', decoder.decode(value, { stream: true }));
+            }
+            parser.feed(decoder.decode());
+        }finally {
+            if (activeReaderRef.current === reader) {
+                activeReaderRef.current = null;
+            }
+        }
         //清理遗留的 raf 调度，确保最终结果被正确更新
         if (rafId !== null) {
             cancelAnimationFrame(rafId);
@@ -180,7 +209,12 @@ export default function Evocation({className, onClose, selectedNodes}: Evocation
     }
 
     async function fetchPostAnswer(question: string) {
+        abortCurrentRequest();
+
         if (!question.trim()) return;
+
+        const controller = new AbortController();
+
 
         setQuestion('');
         setFiles(null);
@@ -210,7 +244,11 @@ export default function Evocation({className, onClose, selectedNodes}: Evocation
         ]);
 
         try {
+
+            activeControllerRef.current = controller;
+
             const node_ids = selectedNodes.map(node => node.id);
+            const formData = new FormData();
             formData.append('message', question);
             formData.append('id','1');
             formData.append('client_user_id', userCliendId);
@@ -227,18 +265,26 @@ export default function Evocation({className, onClose, selectedNodes}: Evocation
             const response = await fetch('/api/chat', {
                 method: 'POST',
                 body:formData,
+                signal: controller.signal,
             });
             if (!response.ok) throw new Error('Network response was not ok');
-            await readSseAnswerStream(response, assistantId);
+            await readSseAnswerStream(response, assistantId, controller.signal);
         }catch (error) {
             toast.error(`Failed to fetch answer: ${(error as Error).message}`);
         } 
         finally {
-            setIsAnswering(false);
+                if (activeControllerRef.current === controller) {
+                    activeControllerRef.current = null;
+                }
+                 setIsAnswering(false);
         }
     }
 
     async function fetchPutAnswer(node_id=1,message_id:number,role:"user"|"assistant",message?:string) {
+        abortCurrentRequest();
+
+        const controller = new AbortController();
+
         setIsAnswering(true);
         const targetAssistant =
             role === 'user'
@@ -260,19 +306,24 @@ export default function Evocation({className, onClose, selectedNodes}: Evocation
         const body: RegenerateBody = { node_id, message_id, role };
         if (message) body.message = message;
         try{
+            activeControllerRef.current = controller;
             const response = await fetch('/api/chat', {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(body),
+                signal: controller.signal,
             });
             if (!response.ok) throw new Error('Network response was not ok');
-            await readSseAnswerStream(response, sseAssistantId);
+            await readSseAnswerStream(response, sseAssistantId, controller.signal);
         }catch (error) {
             toast.error(`Failed to fetch answer: ${(error as Error).message}`);
         }finally {
-            setIsAnswering(false);
+                if (activeControllerRef.current === controller) {
+                    activeControllerRef.current = null;
+                }
+                setIsAnswering(false);
         }
     }
     async function fetchmessages(){
@@ -363,7 +414,7 @@ export default function Evocation({className, onClose, selectedNodes}: Evocation
                             ))}
                 </div>
                 {/* 实际输入框 */}
-                <Input   question={question} setQuestion={setQuestion} onSubmit={fetchPostAnswer} isAnswering={isAnswering} fileInput={()=>fileInput?.current?.click()}/>
+                <Input   question={question} setQuestion={setQuestion} onSubmit={fetchPostAnswer} isAnswering={isAnswering} fileInput={()=>fileInput?.current?.click()} abortRequest={abortCurrentRequest}/>
             
             </div>}
 

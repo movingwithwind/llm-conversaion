@@ -1,5 +1,5 @@
 import { MoveUp, Square, Plus } from 'lucide-react';
-export default function Input({className, question, setQuestion, onSubmit, isAnswering,fileInput}: {className?: string; question: string; setQuestion: (q: string) => void; onSubmit: (q: string) => void; isAnswering: boolean,fileInput:()=>void}) {
+export default function Input({className, question, setQuestion, onSubmit, isAnswering,fileInput, abortRequest}: {className?: string; question: string; setQuestion: (q: string) => void; onSubmit: (q: string) => void; isAnswering: boolean,fileInput:()=>void, abortRequest:()=>void}) {
     return <>
         <form onSubmit={(e) => {e.preventDefault(); onSubmit(question); }} className ={ `w-full relative ${className}` }>
         <input 
@@ -10,7 +10,11 @@ export default function Input({className, question, setQuestion, onSubmit, isAns
             onChange={(e) => setQuestion(e.target.value)}
             disabled={isAnswering}
         />
-            <button type="submit" disabled={isAnswering} className={` absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full bg-blue-400 }`}>
+            <button
+                type={isAnswering ? "button" : "submit"}
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full bg-blue-400"
+                onClick={isAnswering ? abortRequest : undefined}
+            >
                 {!isAnswering ? <MoveUp className="h-5 w-5 text-white " /> : <Square className='h-4 w-4 text-white' fill="currentColor" stroke="none"/>}
             </button>
             <button className=' absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 flex items-center justify-center rounded-full' onClick={fileInput}><Plus className="h-5 w-5 text-blue-500" /> </button>
