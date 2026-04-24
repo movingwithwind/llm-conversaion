@@ -1,6 +1,6 @@
 import Input from "./input";
 import MessageQueue from "./Message-quene";
-import {  useState,useEffect,useRef } from "react";
+import {  useState,useEffect,useRef, useCallback } from "react";
 import {toast} from"sonner";
 import { FileChartColumnIncreasing } from 'lucide-react';
 import { useFileDrop } from "./useFileDrop";
@@ -21,6 +21,8 @@ type Message = {
     role: 'user' | 'assistant';
     content: string;
     nodeLabels?: string[];
+    isThinking?: boolean;
+    thinkingData?: string;
 };
 
 type backMessage = {
@@ -83,6 +85,12 @@ export default function Evocation({className, onClose, selectedNodes}: Evocation
 
 
     function abortCurrentRequest() {
+            setMessages(prev => prev.map((message) => {
+                if (message.role === 'assistant' && message.isThinking) {
+                    return { ...message, isThinking: false };
+                }
+                return message;
+            }));
             if (activeControllerRef.current) {
                 activeControllerRef.current.abort();
                 console.log('Aborting current request', activeControllerRef.current);
@@ -97,14 +105,29 @@ export default function Evocation({className, onClose, selectedNodes}: Evocation
         }
 
 
-    function updateAssistantMessageById(assistantId: number, content: string) {
-        setMessages(prev => prev.map(message => {
-            if (message.id === assistantId && message.role === 'assistant') {
-                return { ...message, content };
-            }
-            return message;
-        }));
+    function updateAssistantById(assistantId: number, content?: string,thinkingData?:string,isThinking?:boolean) {
+        if(content !== undefined) {
+            setMessages(prev => prev.map(message => {
+                if (message.id === assistantId && message.role === 'assistant') {
+                    return { ...message, content };
+                }
+                return message;
+            }));
+        }
+        if(thinkingData !== undefined || isThinking !== undefined) {
+            setMessages(prev => prev.map((message) => {
+                if (message.id === assistantId && message.role === 'assistant') {
+                    return {
+                        ...message,
+                        isThinking,
+                        thinkingData: thinkingData ?? message.thinkingData,
+                    };
+                }
+                return message;
+            }));
+        }
     }
+
 
     async function readSseAnswerStream(response: Response, assistantId: number,signal: AbortSignal) {
         if (!response.body) throw new Error('Response body is empty');
@@ -122,7 +145,7 @@ export default function Evocation({className, onClose, selectedNodes}: Evocation
                 const payload = (event.data ?? '').trim();
                 let parsedData: unknown = null;
 
-                if (payload.startsWith('{')) {// 尝试解析 JSON 数据，这个返回只有JSON和[DONE]两种情况
+                if (eventType === 'answer') {// 尝试解析 JSON 数据，这个返回只有JSON和[DONE]两种情况
                     try {
                         parsedData = JSON.parse(payload);
                     } catch {
@@ -130,8 +153,20 @@ export default function Evocation({className, onClose, selectedNodes}: Evocation
                     }
                 }
 
+                //中间状态处理
+                if (eventType === 'parsing_input') {
+                    updateAssistantById(assistantId, undefined, event.data ?? '正在理解用户问题中', true);
+                }
+                if (eventType === 'fetching_context') {
+                    updateAssistantById(assistantId, undefined, event.data ?? '获取背景信息中', true);
+                }
+                if (eventType === 'reasoning') {
+                    updateAssistantById(assistantId, undefined, event.data ?? '思考中', true);
+                }
 
-                if(eventType === 'done' || payload === '[DONE]' || isDoneData(parsedData)){
+
+                if(eventType === 'done'  || isDoneData(parsedData)){
+                    updateAssistantById(assistantId, undefined, undefined, false);
                     if(isDoneData(parsedData)) {
                         const data = parsedData;
                         setMessages(prev =>
@@ -151,12 +186,13 @@ export default function Evocation({className, onClose, selectedNodes}: Evocation
                 }
                 if(eventType !== 'answer') return;
                 try{
+                    updateAssistantById(assistantId, undefined, undefined, false);
                     const data = (parsedData ?? JSON.parse(payload)) as { answer?: string };
                     if(typeof data.answer !== 'string' || !data.answer) return;
                     assistantMessageText += data.answer;
                     if(!rafId){
                         rafId = requestAnimationFrame(() => {
-                            updateAssistantMessageById(assistantId, assistantMessageText);
+                            updateAssistantById(assistantId, assistantMessageText,undefined, true);
                             rafId = null; // 执行完后清理 ID，允许下一帧调度
                         });                        
                     }
@@ -187,7 +223,7 @@ export default function Evocation({className, onClose, selectedNodes}: Evocation
         if (rafId !== null) {
             cancelAnimationFrame(rafId);
         }
-        updateAssistantMessageById(assistantId, assistantMessageText);
+        updateAssistantById(assistantId, assistantMessageText, undefined, false);
     }
      function handleFileupload(e: React.ChangeEvent<HTMLInputElement>){
         const files = e.target.files;
@@ -240,6 +276,8 @@ export default function Evocation({className, onClose, selectedNodes}: Evocation
                 cliendId: assistantCliendId,
                 parent_id: userId,
                 nodeLabels: selectedNodes.map(node => node.data.label),
+                isThinking: true,
+                thinkingData: '',
             },
         ]);
 
@@ -300,7 +338,7 @@ export default function Evocation({className, onClose, selectedNodes}: Evocation
                         : msg.id === message_id;
 
                 if (!shouldUpdate) return msg;
-                return { ...msg, content: '' };
+                return { ...msg, content: '', isThinking: true, thinkingData: '' };
             })
         );
         const body: RegenerateBody = { node_id, message_id, role };
@@ -326,7 +364,7 @@ export default function Evocation({className, onClose, selectedNodes}: Evocation
                 setIsAnswering(false);
         }
     }
-    async function fetchmessages(){
+    const fetchmessages = useCallback(async () => {
         let Url=`/api/chat?`;
         if(selectedNodes.length>0){
             selectedNodes.forEach(node=>{
@@ -353,17 +391,19 @@ export default function Evocation({className, onClose, selectedNodes}: Evocation
                 nodeLabels: (item.node_links ?? [])
                     .map((link) => link.node?.data?.label)
                     .filter((label): label is string => Boolean(label)),//is实现类型收窄
+                isThinking: false,
+                thinkingData: '',
             }))
         );
         setLoading(false);
-    }
+    }, [selectedNodes]);
     useEffect(()=>{
         try{
         fetchmessages();
         }catch(error){
             toast.error(`Failed to fetch messages: ${(error as Error).message}`);
         }
-    },[])
+    },[fetchmessages])
     return (
         <div className={`${className} relative overflow-hidden ${Loading ? 'animate-pulse' : ''}`} {...bind} onDrop={handleFileDrop}>
             {/* 背景信息部分 */}
@@ -392,8 +432,8 @@ export default function Evocation({className, onClose, selectedNodes}: Evocation
             </div>
             )}
 
-            {/*消息预加载部分*/}
-            {Loading ? <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 "><div className="animate-spin-custom"><Loader className="w-8 h-8" /></div></div>:<MessageQueue Messages={Messages} retry={fetchPutAnswer} setMessages={setMessages}/>}
+            {/*消息列表部分*/}
+            {Loading ? <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 "><div className="animate-spin-custom"><Loader className="w-8 h-8" /></div></div>:<MessageQueue Messages={Messages} retry={fetchPutAnswer} setMessages={setMessages} />}
 
             {/* 关闭按钮 */}
             <button onClick={onClose} className="absolute top-4 right-4">X</button>

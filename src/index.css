@@ -239,3 +239,23 @@ pre code {
 .animate-spin-custom {
   animation: spin 3s linear infinite;
 }
+
+@keyframes thinking-dot-grow {
+  0% {
+    transform: scale(0.75);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(1.45);
+    opacity: 1;
+  }
+}
+
+.thinking-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 9999px;
+  background-color: #374151;
+  transform-origin: center;
+  animation: thinking-dot-grow 0.9s ease-in-out infinite alternate;
+}

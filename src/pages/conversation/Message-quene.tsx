@@ -14,9 +14,11 @@ type Message = {
     role: 'user' | 'assistant';
     content: string;
   nodeLabels?: string[];
+  isThinking?: boolean;
+  thinkingData?: string;
 };
 
-export default function MessageQueue({ Messages,retry,setMessages}: { Messages: Message[],retry:(node_id:number,message_id:number,role:"user"|"assistant",message?:string)=>void,setMessages:React.Dispatch<React.SetStateAction<Message[]>>}) {
+export default function MessageQueue({ Messages,retry,setMessages}: { Messages: Message[],retry:(node_id:number,message_id:number,role:"user"|"assistant",message?:string)=>void,setMessages:React.Dispatch<React.SetStateAction<Message[]>> }) {
   const messageRefs = useRef<HTMLDivElement[]>([]); 
   const [isEditing,setisEditing]=useState(new Array(Messages.length).fill(false));
   const [isCopying,setisCopying]=useState(new Array(Messages.length).fill(false));
@@ -54,7 +56,7 @@ export default function MessageQueue({ Messages,retry,setMessages}: { Messages: 
             className={'p-4 rounded-lg mb-2 max-w-[85%] ' + (message.role === 'user' ? 'group bg-blue-300 self-end' : ' self-start')}
             ref={(el) => (el && (messageRefs.current[message.id] = el), undefined)}>
 
-            {message.role === 'assistant' ? (
+            {message.role === 'assistant' ? message.isThinking ? Thinkingstatus(message.thinkingData ?? '思考中') : (
               <div className='prose prose-sm max-w-none' id={`message-${message.cliendId}`}>
                 {message.nodeLabels && message.nodeLabels.length > 0 && (
                   <div className='mb-2 flex flex-wrap gap-1 not-prose'>
@@ -98,4 +100,13 @@ export default function MessageQueue({ Messages,retry,setMessages}: { Messages: 
     </>
 
   );
+}
+
+function Thinkingstatus(ThinkingData: string) {
+  return (
+    <div className='text-sm text-gray-500 flex items-center gap-2'>
+      <span className='thinking-dot' />
+      <p>{ThinkingData}</p>
+    </div>
+  )
 }
