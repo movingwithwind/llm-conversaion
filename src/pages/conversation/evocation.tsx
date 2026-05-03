@@ -6,13 +6,14 @@ import { FileChartColumnIncreasing } from 'lucide-react';
 import { useFileDrop } from "./useFileDrop";
 import { SUPPORTED_MIME_TYPES } from "../../compents/FileType";
 import {  Loader } from 'lucide-react';
-import { type FrontNode } from "../main/data";
+import type { nodeschemaType } from "../../api/schema";
 import { createParser } from 'eventsource-parser';
+import { chatAPi } from "../../api/chat";
 
 type EvocationProps = {
     className?: string;
     onClose: () => void;
-    selectedNodes: FrontNode[];
+    selectedNodes: nodeschemaType;
 }
 type Message = {
     id: number;
@@ -365,22 +366,7 @@ export default function Evocation({className, onClose, selectedNodes}: Evocation
         }
     }
     const fetchmessages = useCallback(async () => {
-        let Url=`/api/chat?`;
-        if(selectedNodes.length>0){
-            selectedNodes.forEach(node=>{
-                Url+=`ids=${node.id}&`;
-            });
-        }else{
-            throw new Error('No selected nodes to fetch messages for');
-        }
-        const response = await fetch(Url, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-        });
-        const data = await response.json() ;
-        if(!response.ok) throw new Error(`Network response was not ok,${data.message}`);
+        const data = await chatAPi.Get(selectedNodes.map(node => node.id));
         setMessages(
             data.messages.map((item: backMessage) => ({
                 id: item.id,

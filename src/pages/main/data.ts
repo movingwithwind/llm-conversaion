@@ -1,41 +1,8 @@
-export type BackNode={
-    id:number;
-    title: string;
-    description: string;
-    _count: {
-        message_links: number;
-    }
-}
-export type BackEdge={
-    from:number;
-    to:number;
-    condition: string;
-}
-export type NodeData = {
-  label: string;
-  description: string;
-};
-export type FrontNode={
-  id:string;
-    message_count?: number;
-    type?: 'thoughtNode';
-    data: NodeData;
-    position: { x: number; y: number };
-}
-export type FrontEdge={
-    id:string;
-  source:string;
-  target:string;
-    label: string;
-    type: 'smoothstep' | 'straight';
-}
-export type Map={
-    id:number;
-    question:string;
-}  
+import type { graphnodeschemaType, graphedgeschemaType, nodeschemaType, edgeschemaType } from '../../api/schema';
 
-export type GraphLayout= "Radial layout"| "Hierarchical layout"
-export function NodesBackToFront(backNodes: BackNode[]): FrontNode[] {
+export type GraphLayout = "Radial layout" | "Hierarchical layout";
+
+export function NodesBackToFront(backNodes: graphnodeschemaType): nodeschemaType {
   return backNodes.map((node) => ({
     id: node.id.toString(),
     type: 'thoughtNode',
@@ -44,16 +11,22 @@ export function NodesBackToFront(backNodes: BackNode[]): FrontNode[] {
       description: node.description,
     },
     position: { x: 0, y: 0 },
+    map_id: 0,
+    _count: {
+        message_links: 0
+    }
   }));
 }
 
-export function EdgesBackToFront(backEdges: BackEdge[]): FrontEdge[] {
+export function EdgesBackToFront(backEdges: graphedgeschemaType): edgeschemaType {
   return backEdges.map((edge) => ({
     id: `${edge.from}-${edge.to}`,
     source: edge.from.toString(),
     target: edge.to.toString(),
     label: edge.condition,
-    type: 'straight',
+    type: 'messageLink',
+    map_id: 0,
+    created_at: new Date().toISOString(),
   }));
 }
 

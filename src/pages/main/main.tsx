@@ -4,38 +4,33 @@ import QuestionSidebar from './QuestionSidebar'
 import ThinkingMap from './ThinkingMap'
 import {toast} from"sonner"
 import Evocation from '../conversation/evocation'
-import { type BackEdge,type BackNode,type FrontEdge,type FrontNode,type GraphLayout,type Map,NodesBackToFront,EdgesBackToFront } from './data'
+import { type GraphLayout,NodesBackToFront,EdgesBackToFront } from './data'
+import type { graphnodeschemaType, graphedgeschemaType, nodeschemaType, edgeschemaType } from '../../api/schema';
+import { mapAPi } from '../../api/map'
+import { graphAPi } from '../../api/graph'
 
 function Conversation() {
   const [question, setQuestion] = useState('')
   const [lastquestion, setLastQuestion] = useState('')
   const[isconversationStarted,setIsConversationStarted]=useState(false)
-  const [nodes, setNodes] = useState<FrontNode[]>([]);
-  const [edges, setEdges] = useState<FrontEdge[]>([]);
+  const [nodes, setNodes] = useState<nodeschemaType>([]);
+  const [edges, setEdges] = useState<edgeschemaType>([]);
   const [Layout, setLayout] = useState<GraphLayout>("Hierarchical layout")
   const [havinglayouted, setHavingLayouted] = useState(false);
   const [isGraphing, setIsGraphing] = useState(false);
-  const [Maps, setMaps] = useState<Map[]>([])
+  const [Maps, setMaps] = useState<{id: number, question: string}[]>([])
   const [activeMapId, setActiveMapId] = useState<number | null>(null);
-  const [selectedNodes, setSelectedNodes] = useState<FrontNode[]>([]);
+  const [selectedNodes, setSelectedNodes] = useState<nodeschemaType>([]);
 
   const Forgraph=async (message:string)=>{
     try{
       setSelectedNodes([]);
-      const response = await fetch('/api/graph', {
-        method: 'POST',
-        headers: {  'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: message }),
-      });
-      if (!response.ok) {
-        throw new Error(`Server error: ${response.statusText}`);
-      }
-      const data = await response.json();
-      const {nodes: Backnodes, edges: Backedges, layout}: {nodes:BackNode[],edges:BackEdge[],layout:GraphLayout}=data.tool_results[0].output
+      const data=await graphAPi.Post(message);
+      const {nodes: Backnodes, edges: Backedges, layout}: {nodes:graphnodeschemaType,edges:graphedgeschemaType,layout:GraphLayout}=data.tool_results[0].output
       console.log('Back Nodes:', Backnodes);
       console.log('Back Edges:', Backedges);
-      const Frontnodes:FrontNode[]=NodesBackToFront(Backnodes)
-      const Frontedges:FrontEdge[]=EdgesBackToFront(Backedges)
+      const Frontnodes:nodeschemaType=NodesBackToFront(Backnodes)
+      const Frontedges:edgeschemaType=EdgesBackToFront(Backedges)
       setHavingLayouted(true);
       setNodes(Frontnodes);
       setLayout(layout);
@@ -61,10 +56,7 @@ function Conversation() {
 
   const GetMaps=async()=>{
     try{
-      const response = await fetch('/api/map')
-      if (!response.ok) {        throw new Error(`Server error: ${response.statusText}`);
-      }
-      const data:{ maps: Map[] } = await response.json();
+      const  data=await mapAPi.Get();
       setMaps(data.maps.reverse());
     } catch (error) {
       console.error('Error fetching graph data:', error);
@@ -75,12 +67,8 @@ function Conversation() {
   const GetGraph=async(id:number)=>{
     try{
       setSelectedNodes([]);
-      const response = await fetch(`/api/graph/?id=${id}`)
-      if (!response.ok) {
-        throw new Error(`Server error: ${response.statusText}`);
-      }
-      const data = await response.json();
-      const nodes =data.map.nodes.map((node:BackNode) => ({
+      const data=await graphAPi.Get(id);
+      const nodes =data.map.nodes.map((node) => ({
         ...node,
         message_count: node._count.message_links,
       }));
@@ -99,13 +87,7 @@ function Conversation() {
   const DeleteMap=async(id:number)=>{
     try{
       setSelectedNodes([]);
-      const response = await fetch(`/api/map/?id=${id}`,{
-        method:'DELETE'
-      })
-      if (!response.ok) {
-        throw new Error(`Server error: ${response.statusText}`);
-      }
-      const data=await response.json();
+      const data=await mapAPi.Delete(id);
       await GetMaps();
       if(activeMapId===id){
         setNodes([]);
@@ -119,17 +101,9 @@ function Conversation() {
     }
   }
 
-  const PostMap=useCallback(async(nodes:FrontNode[],edges:FrontEdge[],layout:GraphLayout)=>{
+  const PostMap=useCallback(async(nodes:nodeschemaType,edges:edgeschemaType,layout:GraphLayout)=>{
     try{
-      const response = await fetch('/api/map', {
-        method: 'POST',
-        headers: {  'Content-Type': 'application/json' },
-        body: JSON.stringify({ question: lastquestion, nodes, edges, layout }),
-      });
-      if (!response.ok) {
-        throw new Error(`Server error: ${response.statusText}`);
-      }
-      const data = await response.json();
+      const data = await mapAPi.Post(nodes, edges, lastquestion, layout);
       setActiveMapId(data.mapId);
       GetMaps();
       console.log(data);

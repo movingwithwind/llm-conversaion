@@ -1,11 +1,12 @@
 import dagre from 'dagre';
-import { type FrontEdge, type FrontNode,type GraphLayout } from "./data";
+import type { nodeschemaType, edgeschemaType } from '../../api/schema';
+import { type GraphLayout } from "./data";
 
 const RING_GAP = 360;
 const MIN_SECTOR_GAP = Math.PI / 24;
 const NODE_ANCHOR_OFFSET = 58;
 
-function selectCenterNodeId(nodes: FrontNode[]): string {
+function selectCenterNodeId(nodes: nodeschemaType): string {
   return nodes[0]?.id ?? '';
 }
 
@@ -22,7 +23,7 @@ function sortIds(ids: string[]): string[] {
   });
 }
 
-export function layoutGraph(nodes: FrontNode[], edges: FrontEdge[], layout: GraphLayout) {
+export function layoutGraph(nodes: nodeschemaType, edges: edgeschemaType, layout: GraphLayout) {
   if (layout === 'Hierarchical layout') {
   const g = new dagre.graphlib.Graph();
   g.setDefaultEdgeLabel(() => ({}));
