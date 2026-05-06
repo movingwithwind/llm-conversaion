@@ -1,13 +1,12 @@
-import {type Map,type FrontNode} from "./data"
 import { Clock, Trash2 } from 'lucide-react'
-
+import type { nodeschemaType } from '../../api/schema';
 
 
 function SectionTitle({ title }: { title: string }) {
   return <h3 className="text-sm font-semibold text-slate-700">{title}</h3>
 }
 
-function QuestionSidebar({ question, Maps,GetGraph,DeleteMap,avtivemapId, selectedNodes, setSelectedNodes, startConversation }: { question: string; Maps: Map[]; GetGraph: (id:number) => void; DeleteMap: (id:number) => void; avtivemapId: number | null; selectedNodes: FrontNode[]; setSelectedNodes: React.Dispatch<React.SetStateAction<FrontNode[]>>; startConversation: () => void }) {
+function QuestionSidebar({ question, Maps,GetGraph,DeleteMap,avtivemapId, selectedNodes, startConversation }: { question: string; Maps: {id: number, question: string}[]; GetGraph: (id:number) => void; DeleteMap: (id:number) => void; avtivemapId: number | null; selectedNodes: nodeschemaType;  startConversation: () => void }) {
   const safeMaps = Array.isArray(Maps) ? Maps : []
 
   return (

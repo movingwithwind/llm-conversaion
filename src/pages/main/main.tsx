@@ -66,8 +66,8 @@ function Conversation() {
 
   const GetGraph=async(id:number)=>{
     try{
-      setSelectedNodes([]);
       const data=await graphAPi.Get(id);
+      setSelectedNodes([]);
       const nodes =data.map.nodes.map((node) => ({
         ...node,
         message_count: node._count.message_links,
@@ -128,7 +128,7 @@ function Conversation() {
       <main className="mx-auto flex w-full flex-1 flex-col overflow-hidden shadow-2xl">
 
         <section className="flex min-h-[620px] flex-1 flex-col lg:flex-row">
-          <QuestionSidebar question={lastquestion} Maps={Maps} GetGraph={GetGraph} avtivemapId={activeMapId} DeleteMap={DeleteMap} selectedNodes={selectedNodes} setSelectedNodes={setSelectedNodes} startConversation={() => setIsConversationStarted(true)} />
+          <QuestionSidebar question={lastquestion} Maps={Maps} GetGraph={GetGraph} avtivemapId={activeMapId} DeleteMap={DeleteMap} selectedNodes={selectedNodes}  startConversation={() => setIsConversationStarted(true)} />
 
           <div className="min-w-0 flex-1 border-y border-slate-200 bg-white/70 lg:border-x lg:border-y-0 relative">
             <ThinkingMap initialnodes={nodes} initialedges={edges} isgraphing={isGraphing} Layout={Layout} havinglayouted={havinglayouted} PostMap={PostMap} selectedNodes={selectedNodes} setSelectedNodes={setSelectedNodes}  />
