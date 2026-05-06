@@ -1,7 +1,8 @@
 import ReactFlow, { Background, BackgroundVariant, Controls, Handle, Position, useEdgesState, useNodesState, type NodeProps } from "reactflow"
 import "reactflow/dist/style.css";
 import { layoutGraph} from "./dagre";
-import { type FrontEdge, type FrontNode,type NodeData,type GraphLayout } from "./data";
+import type { nodeschemaType, edgeschemaType } from '../../api/schema';
+import { type GraphLayout } from "./data";
 import { useLayoutEffect, useMemo, type Dispatch, type SetStateAction } from "react";
 
 
@@ -10,9 +11,9 @@ function SelectNodeButton({
   selectedNodes,
   setSelectedNodes,
 }: {
-  node: FrontNode;
-  selectedNodes: FrontNode[];
-  setSelectedNodes: Dispatch<SetStateAction<FrontNode[]>>;
+  node: nodeschemaType[number];
+  selectedNodes: nodeschemaType;
+  setSelectedNodes: Dispatch<SetStateAction<nodeschemaType>>;
 }) {
   const isSelected = selectedNodes.some((selectedNode) => selectedNode.id === node.id);
 
@@ -46,9 +47,9 @@ function SelectNodeButton({
   );
 }
 
-type SelectableNodeProps = NodeProps<NodeData> & {
-  selectedNodes: FrontNode[];
-  setSelectedNodes: Dispatch<SetStateAction<FrontNode[]>>;
+type SelectableNodeProps = NodeProps<nodeschemaType[number]['data']> & {
+  selectedNodes: nodeschemaType;
+  setSelectedNodes: Dispatch<SetStateAction<nodeschemaType>>;
   messageCount?: number;
 };
 
@@ -63,7 +64,9 @@ function ThoughtNode({ id, data, selected, selectedNodes, setSelectedNodes, mess
     message_count: messageCount,
     data,
     position: { x: 0, y: 0 },
-  } as FrontNode;
+    map_id: 0,
+    _count: { message_links: messageCount || 0 }
+  } as unknown as nodeschemaType[number];
 
   return (
     <div
@@ -113,7 +116,9 @@ function RadialNode({ id, data, selected, selectedNodes, setSelectedNodes, messa
     message_count: messageCount,
     data,
     position: { x: 0, y: 0 },
-  } as FrontNode;
+    map_id: 0,
+    _count: { message_links: messageCount || 0 }
+  } as unknown as nodeschemaType[number];
 
   return (
     <div
@@ -155,19 +160,20 @@ function RadialNode({ id, data, selected, selectedNodes, setSelectedNodes, messa
   );
 }
 
-function ThinkingMap({initialnodes,initialedges,isgraphing,Layout,havinglayouted,PostMap,selectedNodes,setSelectedNodes}:{initialnodes:FrontNode[];initialedges:FrontEdge[];isgraphing:boolean,Layout:GraphLayout,havinglayouted:boolean,PostMap:(nodes:FrontNode[],edges:FrontEdge[],layout:GraphLayout)=>Promise<void>,selectedNodes:FrontNode[],setSelectedNodes:Dispatch<SetStateAction<FrontNode[]>>}) {
-  const [nodes, setNodes, onNodesChange] = useNodesState([] as FrontNode[]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([] as FrontEdge[]);
+function ThinkingMap({initialnodes,initialedges,isgraphing,Layout,havinglayouted,PostMap,selectedNodes,setSelectedNodes}:{initialnodes:nodeschemaType;initialedges:edgeschemaType;isgraphing:boolean,Layout:GraphLayout,havinglayouted:boolean,PostMap:(nodes:nodeschemaType,edges:edgeschemaType,layout:GraphLayout)=>Promise<void>,selectedNodes:nodeschemaType,setSelectedNodes:Dispatch<SetStateAction<nodeschemaType>>}) {
+  const [nodes, setNodes, onNodesChange] = useNodesState([] as unknown as nodeschemaType);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([] as unknown as edgeschemaType);
   const messageCountMap = useMemo(() => {
     const map = new Map<string, number | undefined>();
     initialnodes.forEach((node) => {
+      // @ts-expect-error type migration
       map.set(node.id, node.message_count);
     });
     return map;
   }, [initialnodes]);
   const nodeTypes = useMemo(
     () => ({
-      thoughtNode: (props: NodeProps<NodeData>) =>
+      thoughtNode: (props: NodeProps<nodeschemaType[number]['data']>) =>
         Layout === "Radial layout" ? (
           <RadialNode
             {...props}
