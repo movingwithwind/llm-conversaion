@@ -112,13 +112,12 @@ export function useChatLogic(selectedNodes: nodeschemaType) {
                 const eventType = (event.event ?? '').trim();//去除空格避免影响判断
                 const payload = (event.data ?? '').trim();
                 let parsedData: unknown = null;
+                console.log('Received SSE event:', { eventType, payload });
 
-                if (eventType === 'answer') {// 尝试解析 JSON 数据，这个返回只有JSON和[DONE]两种情况
-                    try {
-                        parsedData = JSON.parse(payload);
-                    } catch {
-                        parsedData = null;
-                    }
+                try {
+                    parsedData = JSON.parse(payload);
+                } catch {
+                    parsedData = null;
                 }
 
                 //中间状态处理
@@ -134,15 +133,18 @@ export function useChatLogic(selectedNodes: nodeschemaType) {
 
 
                 if(eventType === 'done'  || isDoneData(parsedData)){
+                    console.log('Received done event or done data:', eventType, parsedData);
                     updateAssistantById(assistantId, undefined, undefined, false);
                     if(isDoneData(parsedData)) {
                         const data = parsedData;
                         setMessages(prev =>
                             prev.map((msg) => {
                                 if (msg.role === 'user' && msg.cliendId === data.client_user_id) {
+                                    console.log('Updating user message with ID:', msg.id, 'using client_user_id:', data.client_user_id);
                                     return { ...msg, id: data.userid, parent_id: data.user_parent_id };
                                 }
                                 if (msg.role === 'assistant' && msg.cliendId === data.client_assistant_id) {
+                                    console.log('Updating assistant message with ID:', msg.id, 'using client_assistant_id:', data.client_assistant_id);
                                     return { ...msg, id: data.assistantid, parent_id: data.assistant_parent_id };
                                 }
                                 return msg;
@@ -160,10 +162,10 @@ export function useChatLogic(selectedNodes: nodeschemaType) {
                     assistantMessageText += data.answer;
                     if(!rafId){
                         rafId = requestAnimationFrame(() => {
-                            updateAssistantById(assistantId, assistantMessageText,undefined, true);
+                            updateAssistantById(assistantId, assistantMessageText,undefined,false);
                             rafId = null; // 执行完后清理 ID，允许下一帧调度
                         });                        
-                    }
+                    } 
                 }catch{
                     throw new Error('Failed to parse SSE data');
                 }

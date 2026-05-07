@@ -2,10 +2,11 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
 import { Virtuoso } from 'react-virtuoso';
+import type { VirtuosoHandle } from 'react-virtuoso';
 import CodePre from '../../compents/CodePre';
 import { Copy,RefreshCw, PencilLine,Check } from 'lucide-react';
 import { toast } from 'sonner';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 type Message = {
     id: number;
@@ -19,8 +20,22 @@ type Message = {
 };
 
 export default function MessageQueue({ Messages,retry,setMessages}: { Messages: Message[],retry:(node_id:number,message_id:number,role:"user"|"assistant",message?:string)=>void,setMessages:React.Dispatch<React.SetStateAction<Message[]>> }) {
+  const virtuosoRef = useRef<VirtuosoHandle>(null);
   const [isEditing,setisEditing]=useState<boolean[]>([]);
   const [isCopying,setisCopying]=useState<boolean[]>([]);
+
+  useEffect(() => {
+    if (Messages.length > 0) {
+      const timer = setTimeout(() => {
+        virtuosoRef.current?.scrollTo({
+          top: 999999,
+          // 流式生成时更新非常频繁，不建议开启 smooth，否则动画会被互相打断导致卡顿或停滞
+          behavior: 'auto'
+        });
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [Messages]);
 
   function handleCopy(content:string,index:number) {
       setisCopying(prev => { const newCopying = [...prev]; newCopying[index] = true; return newCopying; });
@@ -95,6 +110,7 @@ export default function MessageQueue({ Messages,retry,setMessages}: { Messages: 
   return (
     <div className="h-full w-full">
       <Virtuoso
+        ref={virtuosoRef}
         className="h-full w-full"
         data={Messages}
         itemContent={renderMessage}
