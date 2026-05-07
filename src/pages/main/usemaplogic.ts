@@ -50,7 +50,7 @@ function useMapLogic() {
             toast.success(`Question sent: ${question}`)
           }
 
-  const GetMaps=async()=>{
+  const GetMaps=useCallback(async()=>{
     try{
       const  data=await mapAPi.Get();
       setMaps(data.maps.reverse());
@@ -58,9 +58,9 @@ function useMapLogic() {
       console.error('Error fetching graph data:', error);
       toast.error('Failed to fetch graph data. Please try again later.');
     }
-  }
+  }, [])
 
-  const GetGraph=async(id:number)=>{
+  const GetGraph=useCallback(async(id:number)=>{
     try{
       const data=await graphAPi.Get(id);
       setSelectedNodes([]);
@@ -78,7 +78,7 @@ function useMapLogic() {
       console.error('Error fetching graph data:', error);
       toast.error('Failed to fetch graph data. Please try again later.');
     }
-  }
+  },[])
 
   const DeleteMap=async(id:number)=>{
     try{
