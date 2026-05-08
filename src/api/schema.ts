@@ -73,6 +73,10 @@ export const postGraphResponseSchema = z.object({
     })),
 });
 
+export const putGraphResponseSchema = z.object({
+    message: z.string()
+});    
+
 export const getGraphResponseSchema = z.object({
     message: z.string(),
     map: z.object({

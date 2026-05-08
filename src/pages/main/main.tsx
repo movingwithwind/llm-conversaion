@@ -24,6 +24,7 @@ function Conversation() {
     Maps,
     activeMapId,
     GetMaps,
+    UpdataNode,
     GetGraph,
     DeleteMap,
     PostMap
@@ -46,7 +47,7 @@ function Conversation() {
           <QuestionSidebar question={lastquestion} Maps={Maps} GetGraph={GetGraph} avtivemapId={activeMapId} DeleteMap={DeleteMap} selectedNodes={selectedNodes}  startConversation={() => setIsConversationStarted(true)} />
 
           <div className="min-w-0 flex-1 border-y border-slate-200 bg-white/70 lg:border-x lg:border-y-0 relative">
-            <ThinkingMap initialnodes={nodes} initialedges={edges} isgraphing={isGraphing} Layout={Layout} havinglayouted={havinglayouted} PostMap={PostMap} selectedNodes={selectedNodes} setSelectedNodes={setSelectedNodes}  />
+            <ThinkingMap initialnodes={nodes} initialedges={edges} isgraphing={isGraphing} Layout={Layout} havinglayouted={havinglayouted} PostMap={PostMap} selectedNodes={selectedNodes} setSelectedNodes={setSelectedNodes}  UpdataNode={UpdataNode}/>
             {isconversationStarted && (
               <div className='absolute inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center'>
                 <Evocation className="  bg-white text-black p-4 w-4/5 h-4/5 rounded-2xl shadow-xl p-6 border-none" onClose={() => setIsConversationStarted(false)} selectedNodes={selectedNodes} />

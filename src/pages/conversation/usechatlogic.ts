@@ -5,7 +5,7 @@ import { createParser } from 'eventsource-parser';
 import { chatAPi } from "../../api/chat";
 import type { nodeschemaType } from "../../api/schema";
 
-type Message = {
+export type Message = {
     id: number;
     cliendId: string;
     parent_id: number | null;

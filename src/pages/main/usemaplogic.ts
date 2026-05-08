@@ -39,6 +39,18 @@ function useMapLogic() {
       toast.error('Failed to fetch graph data. Please try again later.');
     }
   }
+
+  const UpdataNode=async(NodeId:string,label: string, description: string )=>{
+    try{
+      const data=await graphAPi.Put(NodeId,label,description);
+      await GetGraph(activeMapId as number);
+      toast.success(data.message);
+    }
+    catch(error){
+      console.error('Error updating node data:', error);
+      toast.error('Failed to update node data. Please try again later.');
+    }
+  }
  
   const handleSend = () => {
             setSelectedNodes([])
@@ -108,7 +120,7 @@ function useMapLogic() {
       console.error('Error saving graph data:', error);
       toast.error('Failed to save graph data. Please try again later.');
     }
-  },[lastquestion])
+  },[lastquestion, GetMaps])
 
 
  return {
@@ -128,6 +140,7 @@ function useMapLogic() {
     activeMapId,
     GetMaps,
     GetGraph,
+    UpdataNode,
     DeleteMap,
     PostMap
  }

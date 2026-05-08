@@ -7,17 +7,7 @@ import CodePre from '../../compents/CodePre';
 import { Copy,RefreshCw, PencilLine,Check } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState, useRef, useEffect } from 'react';
-
-type Message = {
-    id: number;
-    cliendId: string;
-    parent_id: number | null;
-    role: 'user' | 'assistant';
-    content: string;
-  nodeLabels?: string[];
-  isThinking?: boolean;
-  thinkingData?: string;
-};
+import {type Message } from './usechatlogic';
 
 export default function MessageQueue({ Messages,retry,setMessages}: { Messages: Message[],retry:(node_id:number,message_id:number,role:"user"|"assistant",message?:string)=>void,setMessages:React.Dispatch<React.SetStateAction<Message[]>> }) {
   const virtuosoRef = useRef<VirtuosoHandle>(null);
