@@ -60,7 +60,7 @@ function QuestionSidebar({ question, Maps,GetGraph,DeleteMap,avtivemapId, select
             )))}
           </div>
         </div>
-        {/* question conversation */}
+        {/* nodes conversation */}
         <div className="rounded-lg border border-slate-300/70 bg-white/70 p-3 h-48">
           <div className="flex items-center justify-between mb-3">
             <SectionTitle title="For Conversation" />
@@ -68,7 +68,7 @@ function QuestionSidebar({ question, Maps,GetGraph,DeleteMap,avtivemapId, select
           <div className="space-y-2 h-32 overflow-y-auto pr-2 flex flex-col ">
             <div className="h-24 overflow-y-auto">
               {selectedNodes.length === 0 ? (
-                <p className="text-sm text-slate-500">No question selected</p>
+                <p className="text-sm text-slate-500">No nodes selected</p>
               ) : (
                 selectedNodes.map((node) => (
                   <div key={node.id} className="p-2 rounded-md bg-slate-50 border border-slate-200">
@@ -80,6 +80,30 @@ function QuestionSidebar({ question, Maps,GetGraph,DeleteMap,avtivemapId, select
             <button className="w-full mt-2 bg-blue-400 text-white px-2 py-2 rounded mt-auto" onClick={startConversation}>
               Start Conversation
             </button>
+          </div>
+        </div>
+        {/* model choose */}
+        <div className="rounded-lg border border-slate-300/70 bg-white/70 p-3">
+          <SectionTitle title="Model Choose" />
+          <div className="space-y-3 mt-3 flex gap-2">
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-2">Chat Model</label>
+              <select
+                defaultValue="qwen3.5-flash"
+                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none ring-blue-200 focus:ring"
+              >
+                <option value="qwen3.5-flash">qwen3.5-flash</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-700 mb-2">Graph Model</label>
+              <select
+                defaultValue="qwen3.5-flash"
+                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none ring-blue-200 focus:ring"
+              >
+                <option value="qwen3.5-flash">qwen3.5-flash</option>
+              </select>
+            </div>
           </div>
         </div>
       </div>
