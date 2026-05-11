@@ -1,7 +1,7 @@
 import ReactFlow, { Background, BackgroundVariant, Controls, Handle, Position, useEdgesState, useNodesState, type NodeProps } from "reactflow"
 import "reactflow/dist/style.css";
 import { layoutGraph} from "./dagre";
-import { Pencil } from 'lucide-react';
+import {  Pencil } from 'lucide-react';
 import type { nodeschemaType, edgeschemaType } from '../../api/schema';
 import { type GraphLayout } from "./data";
 import { useEffect, useLayoutEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
@@ -345,6 +345,7 @@ function RadialNode({ id, data, selected, selectedNodes, setSelectedNodes, messa
 function ThinkingMap({initialnodes,initialedges,isgraphing,Layout,havinglayouted,PostMap,selectedNodes,setSelectedNodes,UpdataNode}:{initialnodes:nodeschemaType;initialedges:edgeschemaType;isgraphing:boolean,Layout:GraphLayout,havinglayouted:boolean,PostMap:(nodes:nodeschemaType,edges:edgeschemaType,layout:GraphLayout)=>Promise<void>,selectedNodes:nodeschemaType,setSelectedNodes:Dispatch<SetStateAction<nodeschemaType>>,UpdataNode:(NodeId:string,label: string, description: string )=>Promise<void>}) {
   const [nodes, setNodes, onNodesChange] = useNodesState([] as unknown as nodeschemaType);
   const [edges, setEdges, onEdgesChange] = useEdgesState([] as unknown as edgeschemaType);
+  const [selectedLayout, setSelectedLayout] = useState<GraphLayout>(Layout);
   const messageCountMap = useMemo(() => {
     const map = new Map<string, number | undefined>();
     initialnodes.forEach((node) => {
@@ -356,7 +357,7 @@ function ThinkingMap({initialnodes,initialedges,isgraphing,Layout,havinglayouted
   const nodeTypes = useMemo(
     () => ({
       thoughtNode: (props: NodeProps<nodeschemaType[number]['data']>) =>
-        Layout === "Radial layout" ? (
+        selectedLayout === "Radial layout" ? (
           <RadialNode
             {...props}
             selectedNodes={selectedNodes}
@@ -374,7 +375,7 @@ function ThinkingMap({initialnodes,initialedges,isgraphing,Layout,havinglayouted
           />
         ),
     }),
-    [Layout, selectedNodes, setSelectedNodes, messageCountMap, UpdataNode],
+    [selectedLayout, selectedNodes, setSelectedNodes, messageCountMap, UpdataNode],
   );
   useLayoutEffect( () => {
     if (isgraphing) {
@@ -390,6 +391,21 @@ function ThinkingMap({initialnodes,initialedges,isgraphing,Layout,havinglayouted
       return
     }
   }, [initialnodes, initialedges, isgraphing, Layout, setNodes, setEdges,havinglayouted,PostMap]);
+
+  // 当传入的 Layout 改变时，更新本地的 selectedLayout
+  useEffect(() => {
+    setSelectedLayout(Layout);
+  }, [Layout]);
+
+  // 当用户选择不同的 layout 时，调用 layoutGraph 来改变布局
+  useEffect(() => {
+    if (isgraphing) {
+      const { nodes: newNodes, edges: newEdges } = layoutGraph(initialnodes, initialedges, selectedLayout);
+      setNodes(newNodes);
+      setEdges(newEdges);
+    }
+  }, [selectedLayout, Layout, initialnodes, initialedges, isgraphing, setNodes, setEdges]);
+  
   return (
     <div className="relative h-full overflow-hidden  border border-slate-300/60 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.88),_rgba(240,245,255,0.78)_38%,_rgba(231,238,251,0.86)_100%)] p-4 md:p-8">
         {isgraphing ?   <ReactFlow
@@ -428,6 +444,24 @@ function ThinkingMap({initialnodes,initialedges,isgraphing,Layout,havinglayouted
         <Background variant={BackgroundVariant.Lines} color="rgba(148,163,184,0.28)" gap={20} size={1.2} />
         <Controls position="bottom-right" showInteractive={false} className="!rounded-xl !border !border-slate-300/70 !bg-white/80 !text-slate-700" />
       </ReactFlow>: <div className="flex items-center justify-center h-full text-slate-500">No graph to display</div>}
+      {isgraphing &&
+        <div className="z-100 absolute left-4 bottom-4">
+          <div className="rounded-lg border border-slate-300/70 bg-white/70 p-3">
+            <div className="space-y-3 flex gap-2">   
+              <div>
+                <label className="block text-xs font-medium text-slate-700 mb-2">Layout</label>
+                <select
+                        value={selectedLayout}
+                        onChange={(e) => setSelectedLayout(e.target.value as GraphLayout)}
+                        className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none ring-blue-200 focus:ring"
+                      >
+                        <option value="Hierarchical layout">Hierarchical layout</option>
+                        <option value="Radial layout">Radial layout</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+      </div>}
     </div>
   )
 }

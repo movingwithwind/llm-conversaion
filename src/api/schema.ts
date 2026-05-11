@@ -127,6 +127,5 @@ export const models = [
     { value: "qwen3.6-plus", label: "" },
     { value: "qwen3.6-flash", label: "" },
     { value: "qwen3.5-plus", label: "" },
-    { value: "qwen3.5-plus", label: "" },
-    { value: "gpt-3-max", label: "" },
+    { value: "qwen-3-max", label: "" },
 ]
