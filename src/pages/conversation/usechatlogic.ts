@@ -44,9 +44,10 @@ type RegenerateBody = {
   message_id: number;
   role: 'user' | 'assistant';
   message?: string; // 仅 user 编辑时用
+    model: string;
 };
 
-export function useChatLogic(selectedNodes: nodeschemaType) {
+export function useChatLogic(selectedNodes: nodeschemaType, ChatModel: string) {
 
     function isDoneData(value: unknown): value is DoneData {
     if (!value || typeof value !== 'object') return false;
@@ -222,7 +223,7 @@ export function useChatLogic(selectedNodes: nodeschemaType) {
     }, [selectedNodes]);
 
     // 5. POST 和 PUT 发送逻辑
-    async function fetchPostAnswer(question: string, files: File[] | null, includeBackgroundInfo: boolean) {
+    async function fetchPostAnswer(question: string, files: File[] | null, includeBackgroundInfo: boolean, ChatModel: string) {
         abortCurrentRequest();
 
         if (!question.trim()) return;
@@ -268,6 +269,7 @@ export function useChatLogic(selectedNodes: nodeschemaType) {
             formData.append('client_assistant_id', assistantCliendId);
             formData.append('node_ids', node_ids.join(','));
             formData.append('include_background_info', includeBackgroundInfo ? '1' : '0');
+            formData.append('model', ChatModel);
 
             if(files) {
                 for(const file of files) {
@@ -293,7 +295,7 @@ export function useChatLogic(selectedNodes: nodeschemaType) {
         }
     }
 
-    async function fetchPutAnswer(node_id=1,message_id:number,role:"user"|"assistant",message?:string) {
+    async function fetchPutAnswer(node_id=1,message_id:number,role:"user"|"assistant",message?:string, ChatModel?: string) {
         abortCurrentRequest();
 
         const controller = new AbortController();
@@ -316,7 +318,7 @@ export function useChatLogic(selectedNodes: nodeschemaType) {
                 return { ...msg, content: '', isThinking: true, thinkingData: '' };
             })
         );
-        const body: RegenerateBody = { node_id, message_id, role };
+        const body: RegenerateBody = { node_id, message_id, role, model: ChatModel! };
         if (message) body.message = message;
         try{
             activeControllerRef.current = controller;

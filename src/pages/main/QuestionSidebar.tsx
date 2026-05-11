@@ -1,12 +1,12 @@
 import { Clock, Trash2 } from 'lucide-react'
-import type { nodeschemaType } from '../../api/schema';
+import  { type nodeschemaType,models } from '../../api/schema';
 
 
 function SectionTitle({ title }: { title: string }) {
   return <h3 className="text-sm font-semibold text-slate-700">{title}</h3>
 }
 
-function QuestionSidebar({ question, Maps,GetGraph,DeleteMap,avtivemapId, selectedNodes, startConversation }: { question: string; Maps: {id: number, question: string}[]; GetGraph: (id:number) => void; DeleteMap: (id:number) => void; avtivemapId: number | null; selectedNodes: nodeschemaType;  startConversation: () => void }) {
+function QuestionSidebar({ question, Maps,GetGraph,DeleteMap,avtivemapId, selectedNodes, startConversation, ChatModel, setChatModel, GraphModel, setGraphModel }: { question: string; Maps: {id: number, question: string}[]; GetGraph: (id:number) => void; DeleteMap: (id:number) => void; avtivemapId: number | null; selectedNodes: nodeschemaType;  startConversation: () => void; ChatModel: string; setChatModel: React.Dispatch<React.SetStateAction<string>>; GraphModel: string; setGraphModel: React.Dispatch<React.SetStateAction<string>> }) {
   const safeMaps = Array.isArray(Maps) ? Maps : []
 
   return (
@@ -89,19 +89,29 @@ function QuestionSidebar({ question, Maps,GetGraph,DeleteMap,avtivemapId, select
             <div>
               <label className="block text-xs font-medium text-slate-700 mb-2">Chat Model</label>
               <select
-                defaultValue="qwen3.5-flash"
+                value={ChatModel}
+                onChange={(e) => setChatModel(e.target.value)}
                 className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none ring-blue-200 focus:ring"
               >
-                <option value="qwen3.5-flash">qwen3.5-flash</option>
+                {models.map((model) => (
+                  <option key={model.value} value={model.value}>
+                    {model.value}
+                  </option>
+                ))}
               </select>
             </div>
             <div>
               <label className="block text-xs font-medium text-slate-700 mb-2">Graph Model</label>
               <select
-                defaultValue="qwen3.5-flash"
+                value={GraphModel}
+                onChange={(e) => setGraphModel(e.target.value)}
                 className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none ring-blue-200 focus:ring"
               >
-                <option value="qwen3.5-flash">qwen3.5-flash</option>
+                {models.map((model) => (
+                  <option key={model.value} value={model.value}>
+                    {model.value}
+                  </option>
+                ))}
               </select>
             </div>
           </div>

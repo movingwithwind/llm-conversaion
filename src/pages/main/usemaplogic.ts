@@ -16,12 +16,13 @@ function useMapLogic() {
   const [Maps, setMaps] = useState<{id: number, question: string}[]>([])
   const [activeMapId, setActiveMapId] = useState<number | null>(null);
   const [selectedNodes, setSelectedNodes] = useState<nodeschemaType>([]);
-
+  const [ChatModel,setChatModel]=useState("qwen3.5-flash")
+  const [GraphModel,setGraphModel]=useState("qwen3.5-flash")
 
   const Forgraph=async (message:string)=>{
     try{
       setSelectedNodes([]);
-      const data=await graphAPi.Post(message);
+      const data=await graphAPi.Post(message,GraphModel);
       const {nodes: Backnodes, edges: Backedges, layout}: {nodes:graphnodeschemaType,edges:graphedgeschemaType,layout:GraphLayout}=data.tool_results[0].output
       console.log('Back Nodes:', Backnodes);
       console.log('Back Edges:', Backedges);
@@ -126,6 +127,10 @@ function useMapLogic() {
  return {
     question,
     setQuestion,
+    ChatModel,
+    setChatModel,
+    GraphModel,
+    setGraphModel,
     lastquestion,
     handleSend,
     nodes,

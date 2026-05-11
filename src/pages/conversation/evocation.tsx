@@ -13,9 +13,10 @@ type EvocationProps = {
     className?: string;
     onClose: () => void;
     selectedNodes: nodeschemaType;
+    ChatModel: string;
 }
 
-export default function Evocation({className, onClose, selectedNodes}: EvocationProps) {
+export default function Evocation({className, onClose, selectedNodes, ChatModel}: EvocationProps) {
     const {isDragging,bind,handleDrop}=useFileDrop();
 
     const [question, setQuestion] = useState('');
@@ -32,7 +33,7 @@ export default function Evocation({className, onClose, selectedNodes}: Evocation
         fetchPostAnswer,
         fetchPutAnswer,
         abortCurrentRequest
-    } = useChatLogic(selectedNodes);
+    } = useChatLogic(selectedNodes, ChatModel);
 
     useEffect(() => {
         try {
@@ -62,7 +63,7 @@ export default function Evocation({className, onClose, selectedNodes}: Evocation
     }
 
     const handlePostSubmit = (q: string) => {
-        fetchPostAnswer(q, files, includeBackgroundInfo);
+        fetchPostAnswer(q, files, includeBackgroundInfo, ChatModel);
         setQuestion('');
         setFiles(null);
     };

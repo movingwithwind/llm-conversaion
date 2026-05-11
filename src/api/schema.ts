@@ -120,3 +120,13 @@ export const regenerateBodySchema = z.object({
 });
 
 export type regenerateBodyType = z.infer<typeof regenerateBodySchema>;
+
+export const models = [
+    { value: "qwen3.5-flash", label: "" },
+    { value: "qwen3.5-plus", label: "" },
+    { value: "qwen3.6-plus", label: "" },
+    { value: "qwen3.6-flash", label: "" },
+    { value: "qwen3.5-plus", label: "" },
+    { value: "qwen3.5-plus", label: "" },
+    { value: "gpt-3-max", label: "" },
+]
