@@ -1,0 +1,124 @@
+二分查找能否使用在于**必须存在一种“单调性”，使得每一轮都能通过 O(1) 判断，确定目标一定在某一半，从而丢弃另一半**
+
+`class`
+
+
+
+---
+
+
+
+[33. 搜索旋转排序数组 - 力扣（LeetCode）](https://leetcode.cn/problems/search-in-rotated-sorted-array/description/?envType=study-plan-v2&envId=top-100-liked)
+
+
+
+---
+
+
+
+```ts
+
+function search(nums: number[], target: number): number {
+
+    let l=0,r=nums.length-1
+
+    while(l<=r){
+
+        let mid=Math.floor((l+r)/2)
+
+        if(nums[mid]===target) return mid
+
+        if(nums[l]!<=nums[mid]!){
+
+            if(target<nums[mid]!&&nums[l]!<=target) r=mid-1//在左半段，继续收缩查找4555555555555555555555555555555
+
+            else l=mid+1 //不在左半段，向右半段收缩查找
+
+        }
+
+        else{
+
+            if(target>nums[mid]!&&target<=nums[r]!)l=mid+1
+
+            else r=mid-1
+
+        }
+
+    }
+
+    return -1
+
+};
+
+```
+
+---
+
+
+
+# 你好111
+
+
+
+我去试一下，这是第一段正文。
+
+
+
+---
+
+这是第二段正文，上一段与本段之间需要一个空行来分隔。
+
+
+
+---
+
+
+
+# woc
+
+![Alt Text](https://ts1.tc.mm.bing.net/th/id/R-C.518cdd5dc3264b8f9b91e5a3e8ea25e6?rik=Wj2%2b72JoaHD9OA&riu=http%3a%2f%2fpic.vjshi.com%2f2017-09-10%2f7258e22850ffa34e4ddf82add4c6c9d5%2f00003.jpg%3fx-oss-process%3dstyle%2fwatermark&ehk=aYi3dbP20Rsh158mXpI8q5PCWYzTXfrMTw%2bn9DMbU0I%3d&risl=&pid=ImgRaw&r=0)
+
+
+
+---
+
+
+
+```ts
+
+function hello() {
+
+  console.log("mdx ppt");
+
+}
+
+```
+
+
+
+---
+
+
+
+![Alt Text](https://pic1.zhimg.com/v2-921cbb612b77a9459ae65706599bdfcc_r.jpg)
+
+
+
+---
+
+
+
+| 渲染阶段                            | 发生时间                  | 执行环境                | 典型技术 / 关键词                                                     | 数据特性                                      | 常见场景                              |
+
+| ------------------------------- | --------------------- | ------------------- | -------------------------------------------------------------- | ----------------------------------------- | --------------------------------- |
+
+| **构建时渲染**<br/>(The Foundation)  | `next build`          | Server<br/>(构建服务器)  | • SSG（默认）<br/>• ISR（首次生成）<br/>• 静态 RSC 预渲染                     | 🟢 极致快（CDN 分发）<br/>🟡 可能陈旧（需 revalidate）  | 营销页、博客文章<br/>文档中心、页脚 / 导航         |
+
+| **请求时渲染**<br/>(The Dynamic)     | 每次请求 /<br/>缓存失效时      | Server<br/>(应用服务器)  | • SSR（动态）<br/>• RSC Reload<br/>• Streaming（流式）<br/>• ISR（后台再生） | 🟢 数据新鲜（实时数据）<br/>🟢 个性化（Cookie / Header） | 用户仪表盘、权限页<br/>即时库存、Server Actions |
+
+| **客户端渲染**<br/>(The Interactive) | 收到 HTML 后 /<br/>用户交互时 | Browser<br/>(用户浏览器) | • Hydration（水合）<br/>• CSR（SPA 导航）<br/>• useEffect / useState   | 🟢 交互零延迟（本地状态）<br/>🔴 首屏依赖 JS 下载          | 轮播图、复杂表单<br/>模态框、侧边栏开关            |
+
+
+
+
+

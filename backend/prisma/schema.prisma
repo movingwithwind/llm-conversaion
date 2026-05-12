@@ -1,0 +1,81 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model maps {
+  id Int @id @default(autoincrement())
+  question String
+  layout  String
+  nodes nodes[]
+  edges edges[]
+}
+
+model nodes_on_messages {
+  id         Int @id @default(autoincrement())
+
+  node_id    String
+  message_id Int
+
+  @@index([node_id])
+  @@index([message_id])
+
+  node    nodes    @relation(fields: [node_id], references: [id], onDelete: Cascade)
+  message messages @relation(fields: [message_id], references: [id], onDelete: Cascade)
+
+  @@unique([node_id, message_id])
+}
+
+model nodes {
+  id        String   @id
+  type      String?
+  data      Json     
+  position  Json
+  created_at DateTime @default(now())
+  
+  map_id Int
+  map    maps @relation(fields: [map_id], references: [id], onDelete: Cascade)
+
+  message_links nodes_on_messages[]
+}
+
+model edges {
+  id      String @id
+  source  String
+  target  String
+  label   String
+  type    String 
+  created_at DateTime @default(now())
+  
+  map_id Int
+  map    maps @relation(fields: [map_id], references: [id], onDelete: Cascade)
+}
+
+model messages {
+  id      Int         @id @default(autoincrement())
+  role       String // user | assistant
+  content    String
+  parent_id Int?
+  created_at DateTime @default(now())
+  node_links nodes_on_messages[]
+  files file[] 
+}
+
+model file {
+  id         Int      @id @default(autoincrement())
+  url        String
+  type       String
+  size       Int
+  created_at DateTime @default(now())
+
+  message_id Int
+  message    messages @relation(fields: [message_id], references: [id], onDelete: Cascade)
+}
