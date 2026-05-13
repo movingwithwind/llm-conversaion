@@ -47,7 +47,7 @@ type RegenerateBody = {
     model: string;
 };
 
-export function useChatLogic(selectedNodes: nodeschemaType, ChatModel: string) {
+export function useChatLogic(selectedNodes: nodeschemaType, _chatModel: string) {
 
     function isDoneData(value: unknown): value is DoneData {
     if (!value || typeof value !== 'object') return false;
