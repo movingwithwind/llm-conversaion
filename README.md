@@ -23,7 +23,7 @@
 ### 1️⃣ 首次安装依赖
 
 ```bash
-cd e:\react\llm-converstaion
+cd d:\practice\llm-conversation
 npm install
 # 或使用 pnpm（推荐，更快）
 pnpm install
@@ -58,6 +58,7 @@ npx prisma migrate deploy
 # 或使用 pnpm
 pnpm exec prisma migrate deploy
 ```
+> 后端的 `build` 和 `start:dev` 已配置为在启动前自动执行 `prisma generate`，一般不需要手动额外执行。
 
 ### 4️⃣ 启动开发环境
 
@@ -92,7 +93,7 @@ npm run dev:backend   # 后端 - http://localhost:3000
 ## 项目结构
 
 ```text
-llm-converstaion/
+llm-conversation/
 ├── frontend/              ← React 前端
 │   ├── src/
 │   ├── package.json

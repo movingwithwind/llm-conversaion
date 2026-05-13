@@ -6,6 +6,9 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
+    "prisma:generate": "prisma generate",
+    "prebuild": "npm run prisma:generate",
+    "prestart:dev": "npm run prisma:generate",
     "build": "nest build",
     "format": "eslint \"{src,test}/**/*.ts\" --fix",
     "start": "nest start",
