@@ -23,7 +23,7 @@
 ### 1️⃣ 首次安装依赖
 
 ```bash
-cd d:\practice\llm-conversation
+cd llm-conversation
 npm install
 # 或使用 pnpm（推荐，更快）
 pnpm install
@@ -70,6 +70,41 @@ npm run dev
 npm run dev:frontend  # 前端 - http://localhost:5173
 npm run dev:backend   # 后端 - http://localhost:3000
 ```
+
+### 5️⃣ 构建与生产模式启动
+
+下面是将项目构建为可发布产物并在本地以生产方式启动的步骤（保留开发模式不变）。
+
+- 在根目录构建前后端：
+
+```bash
+npm run build
+```
+
+- 启动后端（生产模式，使用已构建的 `dist/`）：
+
+```bash
+cd backend
+# 安装依赖（如尚未安装）
+npm install --production
+# 构建后运行生产启动脚本
+npm run start:prod
+```
+
+- 本地预览前端构建（可选）：
+
+```bash
+cd frontend
+npm install --production
+npm run preview
+# 按终端输出访问预览地址（通常为 http://localhost:5173）
+```
+
+说明：
+- `npm run build` 会先构建后端（生成 `backend/dist/`），再构建前端静态文件。
+- `npm run start:prod` 依赖已存在的 `backend/dist/`，因此必须先运行 `npm run build`。
+- 生产环境请确保 `backend/.env.local`（或环境变量）中包含正确的数据库与 API Key 配置，并已运行数据库迁移。
+
 
 ## API 代理配置
 
