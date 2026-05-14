@@ -5,13 +5,14 @@
 
 ## 技术栈
 
-**前端：** React 19、TypeScript、Vite、Tailwind CSS、React Router、React Flow、Dagre、react-virtuoso、react-markdown、rehype-highlight、remark-gfm、eventsource-parser、ReadableStream、sonner、lucide-react、zod
+**前端：** React 19、TypeScript、Vite、Tailwind CSS、React Router、React Flow、Dagre、react-virtuoso、react-markdown、rehype-highlight、remark-gfm、eventsource-parser、ReadableStream、AbortController / AbortSignal、sonner、lucide-react、zod
 
 **后端：** NestJS、TypeScript、Prisma、PostgreSQL、OpenAI SDK、SSE、Ajv、Winston、AbortController、pdf-parse、mammoth、xlsx、cheerio、multer
 
 ## 项目亮点
 
 - SSE 流式推送与随帧更新：后端基于 OpenAI SDK + SSE 输出增量内容，前端通过 `ReadableStream` 读取上游 SSE，再用 `eventsource-parser` 解析事件并结合 `requestAnimationFrame` 逐帧刷新，减少高频渲染卡顿，支持“思考中 / 获取上下文中”等阶段态展示。
+- 请求中断与流式收束：前端通过 `AbortController` 终止当前请求，并配合 `ReadableStreamDefaultReader.cancel()` 主动关闭流读取，避免切换问题、重试或重新提问时出现旧流串入。
 - 长对话虚拟列表渲染：消息列表使用 `react-virtuoso`，配合自动滚动、复制、编辑、重试等交互，保证长上下文场景下的性能与可用性。
 - Markdown 安全渲染与代码高亮：助手回复通过 `react-markdown` + `remark-gfm` + `rehype-highlight` 渲染，代码块支持一键复制，提升长文本和代码内容的可读性。
 - 图谱式知识组织与编辑：前端基于 `React Flow + Dagre` 构建可视化知识图谱，支持层级 / 径向布局、节点选择、节点编辑、消息数提示和历史图谱回溯。
