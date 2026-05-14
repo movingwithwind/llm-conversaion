@@ -1,6 +1,6 @@
 import { BadRequestException, Body, Controller, Post, Res, Get, Delete, Query, ParseIntPipe } from '@nestjs/common';
 import type { Response } from 'express';
-import { Prisma, PrismaClient } from '@prisma/client/index';
+import { Prisma, PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 const prismaOptions: Prisma.PrismaClientOptions = {
   adapter: new PrismaPg({

@@ -24,5 +24,18 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src"]
+  "include": [
+    "App.tsx",
+    "main.tsx",
+    "compents/**/*.ts",
+    "compents/**/*.tsx",
+    "lib/**/*.ts",
+    "lib/**/*.tsx",
+    "pages/**/*.ts",
+    "pages/**/*.tsx",
+    "types/**/*.ts",
+    "types/**/*.tsx",
+    "types/**/*.d.ts"
+  ],
+  "exclude": ["node_modules", "dist"]
 }
