@@ -1,17 +1,17 @@
 
 ## 项目概述
 
-`LLM Conversation / LLM-Proxy` 是一个面向 AI 对话与智能图谱分析的全栈应用，前端负责对话工作台、长消息渲染和图谱交互，后端负责文件解析、知识节点管理、图谱生成、SSE 流式响应和数据持久化。整体交互流程是：用户发起问题 -> 后端生成图谱或基于节点内容回答 -> 前端实时流式展示 -> 用户在图谱侧选择节点继续追问或回溯历史图谱。
+`LLM Conversation` 是一个面向 AI 对话与智能图谱分析的全栈应用，前端负责对话工作台、长消息渲染和图谱交互，后端负责文件解析、知识节点管理、图谱生成、SSE 流式响应和数据持久化。整体交互流程是：用户发起问题 -> 后端生成图谱或基于节点内容回答 -> 前端实时流式展示 -> 用户在图谱侧选择节点继续追问或回溯历史图谱。
 
 ## 技术栈
 
-**前端：** React 19、TypeScript、Vite、Tailwind CSS、React Router、React Flow、Dagre、react-virtuoso、react-markdown、rehype-highlight、remark-gfm、eventsource-parser、sonner、lucide-react、zod
+**前端：** React 19、TypeScript、Vite、Tailwind CSS、React Router、React Flow、Dagre、react-virtuoso、react-markdown、rehype-highlight、remark-gfm、eventsource-parser、ReadableStream、sonner、lucide-react、zod
 
 **后端：** NestJS、TypeScript、Prisma、PostgreSQL、OpenAI SDK、SSE、Ajv、Winston、AbortController、pdf-parse、mammoth、xlsx、cheerio、multer
 
 ## 项目亮点
 
-- SSE 流式推送与随帧更新：后端基于 OpenAI SDK + SSE 输出增量内容，前端使用 `eventsource-parser` 解析事件并结合 `requestAnimationFrame` 逐帧刷新，减少高频渲染卡顿，支持“思考中 / 获取上下文中”等阶段态展示。
+- SSE 流式推送与随帧更新：后端基于 OpenAI SDK + SSE 输出增量内容，前端通过 `ReadableStream` 读取上游 SSE，再用 `eventsource-parser` 解析事件并结合 `requestAnimationFrame` 逐帧刷新，减少高频渲染卡顿，支持“思考中 / 获取上下文中”等阶段态展示。
 - 长对话虚拟列表渲染：消息列表使用 `react-virtuoso`，配合自动滚动、复制、编辑、重试等交互，保证长上下文场景下的性能与可用性。
 - Markdown 安全渲染与代码高亮：助手回复通过 `react-markdown` + `remark-gfm` + `rehype-highlight` 渲染，代码块支持一键复制，提升长文本和代码内容的可读性。
 - 图谱式知识组织与编辑：前端基于 `React Flow + Dagre` 构建可视化知识图谱，支持层级 / 径向布局、节点选择、节点编辑、消息数提示和历史图谱回溯。
