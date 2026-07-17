@@ -2,8 +2,7 @@ import ReactFlow, { Background, BackgroundVariant, Controls, Handle, Position, u
 import "reactflow/dist/style.css";
 import { layoutGraph} from "./dagre";
 import {  Pencil } from 'lucide-react';
-import type { nodeschemaType, edgeschemaType } from '../../api/schema';
-import { type GraphLayout } from "./data";
+import type { nodeschemaType, edgeschemaType,GraphLayout } from '../../stores/graph/graph.type';
 import { useEffect, useLayoutEffect, useMemo, useState, type Dispatch, type SetStateAction } from "react";
 
 
@@ -445,7 +444,7 @@ function ThinkingMap({initialnodes,initialedges,isgraphing,Layout,havinglayouted
         <Controls position="bottom-right" showInteractive={false} className="!rounded-xl !border !border-slate-300/70 !bg-white/80 !text-slate-700" />
       </ReactFlow>: <div className="flex items-center justify-center h-full text-slate-500">No graph to display</div>}
       {isgraphing &&
-        <div className="z-100 absolute left-4 bottom-4">
+        <div className="z-1 absolute left-4 bottom-4">
           <div className="rounded-lg border border-slate-300/70 bg-white/70 p-3">
             <div className="space-y-3 flex gap-2">   
               <div>

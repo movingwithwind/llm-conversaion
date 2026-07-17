@@ -1,6 +1,18 @@
-import type { graphnodeschemaType, graphedgeschemaType, nodeschemaType, edgeschemaType } from '../../api/schema';
+import type {
+  graphnodeschemaType,
+  graphedgeschemaType,
+  nodeschemaType,
+  edgeschemaType,
+} from '../../api/schema'
 
-export type GraphLayout = "Radial layout" | "Hierarchical layout";
+export type {
+  graphnodeschemaType,
+  graphedgeschemaType,
+  nodeschemaType,
+  edgeschemaType,
+}
+
+export type GraphLayout = 'Radial layout' | 'Hierarchical layout'
 
 export function NodesBackToFront(backNodes: graphnodeschemaType): nodeschemaType {
   return backNodes.map((node) => ({
@@ -13,9 +25,9 @@ export function NodesBackToFront(backNodes: graphnodeschemaType): nodeschemaType
     position: { x: 0, y: 0 },
     map_id: 0,
     _count: {
-        message_links: 0
-    }
-  }));
+      message_links: 0,
+    },
+  }))
 }
 
 export function EdgesBackToFront(backEdges: graphedgeschemaType): edgeschemaType {
@@ -27,6 +39,5 @@ export function EdgesBackToFront(backEdges: graphedgeschemaType): edgeschemaType
     type: 'messageLink',
     map_id: 0,
     created_at: new Date().toISOString(),
-  }));
+  }))
 }
-

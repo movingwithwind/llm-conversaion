@@ -1,6 +1,6 @@
 import dagre from 'dagre';
 import type { nodeschemaType, edgeschemaType } from '../../api/schema';
-import { type GraphLayout } from "./data";
+import { type GraphLayout } from "../../stores/graph/graph.type";
 
 const RING_GAP = 360;
 const MIN_SECTOR_GAP = Math.PI / 24;

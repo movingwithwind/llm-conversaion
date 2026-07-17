@@ -8,16 +8,17 @@ import { SUPPORTED_MIME_TYPES } from "../../compents/FileType";
 import {  Loader } from 'lucide-react';
 import type { nodeschemaType } from "../../api/schema";
 import { useChatLogic } from "./usechatlogic";
+import { ChatModelProvider, useChatModelContext } from "./chatmodel.provider";
 
 type EvocationProps = {
     className?: string;
     onClose: () => void;
     selectedNodes: nodeschemaType;
-    ChatModel: string;
 }
 
-export default function Evocation({className, onClose, selectedNodes, ChatModel}: EvocationProps) {
+function EvocationContent({className, onClose, selectedNodes}: EvocationProps) {
     const {isDragging,bind,handleDrop}=useFileDrop();
+    const { ChatModel, setChatModel } = useChatModelContext();
 
     const [question, setQuestion] = useState('');
     const [includeBackgroundInfo, setIncludeBackgroundInfo] = useState(true);
@@ -84,6 +85,21 @@ export default function Evocation({className, onClose, selectedNodes, ChatModel}
                 </label>
             </div>
 
+            <div className="absolute top-4 left-4 z-20 rounded-lg border border-gray-200 bg-white/90 px-3 py-2 shadow-sm">
+                <label className="block text-xs font-medium text-gray-600 mb-1">Chat Model</label>
+                <select
+                    value={ChatModel}
+                    onChange={(e) => setChatModel(e.target.value)}
+                    className="w-40 rounded-md border border-gray-300 bg-white px-2 py-1 text-sm text-gray-700 outline-none focus:ring"
+                >
+                    <option value="qwen3.5-flash">qwen3.5-flash</option>
+                    <option value="qwen3.5-plus">qwen3.5-plus</option>
+                    <option value="qwen3.6-plus">qwen3.6-plus</option>
+                    <option value="qwen3.6-flash">qwen3.6-flash</option>
+                    <option value="qwen-3-max">qwen-3-max</option>
+                </select>
+            </div>
+
             {/*文件拖拽部分  */}
             {isDragging && (
             <div className="absolute inset-0 z-50 bg-black/10 backdrop-blur-sm flex items-center justify-center rounded-xl">
@@ -125,4 +141,12 @@ export default function Evocation({className, onClose, selectedNodes, ChatModel}
             {/* 隐藏文件上传input */}
             <input type="file" className="hidden" onChange={handleFileupload} ref={fileInput} multiple/>
         </div>)
+}
+
+export default function Evocation(props: EvocationProps) {
+    return (
+        <ChatModelProvider>
+            <EvocationContent {...props} />
+        </ChatModelProvider>
+    )
 }

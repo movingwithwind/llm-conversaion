@@ -4,16 +4,15 @@ import QuestionSidebar from './QuestionSidebar'
 import ThinkingMap from './ThinkingMap'
 import Evocation from '../conversation/evocation'
 import useMapLogic from './usemaplogic'
+import { GraphModelProvider } from './graphmodel.provider'
 
-function Conversation() {
+function ConversationContent() {
 
   const[isconversationStarted,setIsConversationStarted]=useState(false)
 
   const {
     question,
     setQuestion,
-    ChatModel,
-    setChatModel,
     GraphModel,
     setGraphModel,
     lastquestion,
@@ -48,13 +47,13 @@ function Conversation() {
       <main className="mx-auto flex w-full flex-1 flex-col overflow-hidden shadow-2xl">
 
         <section className="flex min-h-[620px] flex-1 flex-col lg:flex-row">
-          <QuestionSidebar question={lastquestion} Maps={Maps} GetGraph={GetGraph} avtivemapId={activeMapId} DeleteMap={DeleteMap} selectedNodes={selectedNodes}  startConversation={() => setIsConversationStarted(true)} ChatModel={ChatModel} setChatModel={setChatModel} GraphModel={GraphModel} setGraphModel={setGraphModel} />
+          <QuestionSidebar question={lastquestion} Maps={Maps} GetGraph={GetGraph} avtivemapId={activeMapId} DeleteMap={DeleteMap} selectedNodes={selectedNodes}  startConversation={() => setIsConversationStarted(true)} GraphModel={GraphModel} setGraphModel={setGraphModel} />
 
           <div className="min-w-0 flex-1 border-y border-slate-200 bg-white/70 lg:border-x lg:border-y-0 relative">
             <ThinkingMap initialnodes={nodes} initialedges={edges} isgraphing={isGraphing} Layout={Layout} havinglayouted={havinglayouted} PostMap={PostMap} selectedNodes={selectedNodes} setSelectedNodes={setSelectedNodes}  UpdataNode={UpdataNode}/>
             {isconversationStarted && (
-              <div className='absolute inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center'>
-                <Evocation className="  bg-white text-black p-4 w-4/5 h-4/5 rounded-2xl shadow-xl p-6 border-none" onClose={() => setIsConversationStarted(false)} selectedNodes={selectedNodes} ChatModel={ChatModel} />
+              <div className='absolute z-2 inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center'>
+                <Evocation className="  bg-white text-black p-4 w-4/5 h-4/5 rounded-2xl shadow-xl p-6 border-none" onClose={() => setIsConversationStarted(false)} selectedNodes={selectedNodes} />
               </div> 
             )}
           </div>
@@ -68,6 +67,14 @@ function Conversation() {
         />
       </main>
     </div>
+  )
+}
+
+function Conversation() {
+  return (
+    <GraphModelProvider>
+      <ConversationContent />
+    </GraphModelProvider>
   )
 }
 

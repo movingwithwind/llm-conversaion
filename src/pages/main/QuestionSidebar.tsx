@@ -6,7 +6,7 @@ function SectionTitle({ title }: { title: string }) {
   return <h3 className="text-sm font-semibold text-slate-700">{title}</h3>
 }
 
-function QuestionSidebar({ question, Maps,GetGraph,DeleteMap,avtivemapId, selectedNodes, startConversation, ChatModel, setChatModel, GraphModel, setGraphModel }: { question: string; Maps: {id: number, question: string}[]; GetGraph: (id:number) => void; DeleteMap: (id:number) => void; avtivemapId: number | null; selectedNodes: nodeschemaType;  startConversation: () => void; ChatModel: string; setChatModel: React.Dispatch<React.SetStateAction<string>>; GraphModel: string; setGraphModel: React.Dispatch<React.SetStateAction<string>> }) {
+function QuestionSidebar({ question, Maps,GetGraph,DeleteMap,avtivemapId, selectedNodes, startConversation, GraphModel, setGraphModel }: { question: string; Maps: {id: number, question: string}[]; GetGraph: (id:number) => void; DeleteMap: (id:number) => void; avtivemapId: number | null; selectedNodes: nodeschemaType;  startConversation: () => void; GraphModel: string; setGraphModel: React.Dispatch<React.SetStateAction<string>> }) {
   const safeMaps = Array.isArray(Maps) ? Maps : []
 
   return (
@@ -82,38 +82,22 @@ function QuestionSidebar({ question, Maps,GetGraph,DeleteMap,avtivemapId, select
             </button>
           </div>
         </div>
-        {/* model choose */}
+        {/* graph model choose */}
         <div className="rounded-lg border border-slate-300/70 bg-white/70 p-3">
-          <SectionTitle title="Model Choose" />
-          <div className="space-y-3 mt-3 flex gap-2">
-            <div>
-              <label className="block text-xs font-medium text-slate-700 mb-2">Chat Model</label>
-              <select
-                value={ChatModel}
-                onChange={(e) => setChatModel(e.target.value)}
-                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none ring-blue-200 focus:ring"
-              >
-                {models.map((model) => (
-                  <option key={model.value} value={model.value}>
-                    {model.value}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-slate-700 mb-2">Graph Model</label>
-              <select
-                value={GraphModel}
-                onChange={(e) => setGraphModel(e.target.value)}
-                className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none ring-blue-200 focus:ring"
-              >
-                {models.map((model) => (
-                  <option key={model.value} value={model.value}>
-                    {model.value}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <SectionTitle title="Graph Model" />
+          <div className="mt-3">
+            <label className="block text-xs font-medium text-slate-700 mb-2">Graph Model</label>
+            <select
+              value={GraphModel}
+              onChange={(e) => setGraphModel(e.target.value)}
+              className="w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 outline-none ring-blue-200 focus:ring"
+            >
+              {models.map((model) => (
+                <option key={model.value} value={model.value}>
+                  {model.value}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
       </div>

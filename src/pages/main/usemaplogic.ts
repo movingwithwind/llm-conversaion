@@ -1,23 +1,26 @@
 import { useState,useCallback } from 'react'
 import {toast} from"sonner"
-import { type GraphLayout,NodesBackToFront,EdgesBackToFront } from './data'
-import type { graphnodeschemaType, graphedgeschemaType, nodeschemaType, edgeschemaType } from '../../api/schema';
+import { type GraphLayout,NodesBackToFront,EdgesBackToFront,type graphnodeschemaType, type graphedgeschemaType, type nodeschemaType, type edgeschemaType } from '../../stores/graph/graph.type'
+import { graphStore } from '../../stores/graph/graph.store';
+import { useGraphModelContext } from './graphmodel.provider';
 import { mapAPi } from '../../api/map'
 import { graphAPi } from '../../api/graph'
 
 function useMapLogic() {
   const [question, setQuestion] = useState('')
   const [lastquestion, setLastQuestion] = useState('')
-  const [nodes, setNodes] = useState<nodeschemaType>([]);
-  const [edges, setEdges] = useState<edgeschemaType>([]);
+  const nodes = graphStore((state) => state.nodes)
+  const edges = graphStore((state) => state.edges)
+  const setNodes = graphStore((state) => state.setNodes)
+  const setEdges = graphStore((state) => state.setEdges)
+  const clearGraph = graphStore((state) => state.clearGraph)
   const [Layout, setLayout] = useState<GraphLayout>("Hierarchical layout")
   const [havinglayouted, setHavingLayouted] = useState(false);
   const [isGraphing, setIsGraphing] = useState(false);
   const [Maps, setMaps] = useState<{id: number, question: string}[]>([])
   const [activeMapId, setActiveMapId] = useState<number | null>(null);
   const [selectedNodes, setSelectedNodes] = useState<nodeschemaType>([]);
-  const [ChatModel,setChatModel]=useState("qwen3.5-flash")
-  const [GraphModel,setGraphModel]=useState("qwen3.5-flash")
+  const { GraphModel, setGraphModel } = useGraphModelContext();
 
   const Forgraph=async (message:string)=>{
     try{
@@ -91,7 +94,7 @@ function useMapLogic() {
       console.error('Error fetching graph data:', error);
       toast.error('Failed to fetch graph data. Please try again later.');
     }
-  },[])
+  },[setNodes,setEdges])
 
   const DeleteMap=async(id:number)=>{
     try{
@@ -99,8 +102,7 @@ function useMapLogic() {
       const data=await mapAPi.Delete(id);
       await GetMaps();
       if(activeMapId===id){
-        setNodes([]);
-        setEdges([]);
+        clearGraph();
         setActiveMapId(null);
       }
       toast.success(data.message);
@@ -127,8 +129,6 @@ function useMapLogic() {
  return {
     question,
     setQuestion,
-    ChatModel,
-    setChatModel,
     GraphModel,
     setGraphModel,
     lastquestion,
