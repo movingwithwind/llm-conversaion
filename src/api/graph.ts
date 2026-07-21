@@ -10,17 +10,21 @@ export const graphAPi = {
         return data;
     },
 
-    async Post(question: string, GraphModel: string) {
+    async Post(question: string, GraphModel: string, knowledgeBaseId?: string) {
         const url = "/api/graph";
         const data = await requestJson(url, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({ question, model: GraphModel }),
+            body: JSON.stringify({
+              question,
+              model: GraphModel,
+              ...(knowledgeBaseId ? { knowledgeBaseId } : {}),
+            }),
             scheama: postGraphResponseSchema,
         });
-    
+
         return data;
     },
 

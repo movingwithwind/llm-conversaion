@@ -9,6 +9,7 @@ import {  Loader } from 'lucide-react';
 import type { nodeschemaType } from "../../api/schema";
 import { useChatLogic } from "./usechatlogic";
 import { ChatModelProvider, useChatModelContext } from "./chatmodel.provider";
+import KBSelector from "../../components/KBSelector";
 
 type EvocationProps = {
     className?: string;
@@ -22,6 +23,7 @@ function EvocationContent({className, onClose, selectedNodes}: EvocationProps) {
 
     const [question, setQuestion] = useState('');
     const [includeBackgroundInfo, setIncludeBackgroundInfo] = useState(true);
+    const [selectedKBId, setSelectedKBId] = useState('');
     const [files, setFiles] = useState<File[] | null>(null);
     const fileInput = useRef<HTMLInputElement>(null);
 
@@ -64,7 +66,7 @@ function EvocationContent({className, onClose, selectedNodes}: EvocationProps) {
     }
 
     const handlePostSubmit = (q: string) => {
-        fetchPostAnswer(q, files, includeBackgroundInfo, ChatModel);
+        fetchPostAnswer(q, files, includeBackgroundInfo, ChatModel, selectedKBId);
         setQuestion('');
         setFiles(null);
     };
@@ -73,16 +75,18 @@ function EvocationContent({className, onClose, selectedNodes}: EvocationProps) {
         <div className={`${className} relative overflow-hidden ${Loading ? 'animate-pulse' : ''}`} {...bind} onDrop={handleFileDrop}>
             {/* 背景信息部分 */}
             <div className="absolute bottom-1 left-15 z-20  -translate-x-1/2  border-gray-200 bg-transparent ">
-                <label className="mt-2 flex items-center gap-2 text-xs text-gray-600 select-none">
-                    <span>加入背景图信息</span>                   
-                    <input
-                        type="checkbox"
-                        checked={includeBackgroundInfo}
-                        onChange={(e) => setIncludeBackgroundInfo(e.target.checked)}
-                        className="h-4 w-4 cursor-pointer rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                    />
-
-                </label>
+                <div className="flex flex-col gap-1.5">
+                    <KBSelector selectedKBId={selectedKBId} onChange={setSelectedKBId} />
+                    <label className="flex items-center gap-2 text-xs text-gray-600 select-none">
+                        <span>加入背景图信息</span>
+                        <input
+                            type="checkbox"
+                            checked={includeBackgroundInfo}
+                            onChange={(e) => setIncludeBackgroundInfo(e.target.checked)}
+                            className="h-4 w-4 cursor-pointer rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                        />
+                    </label>
+                </div>
             </div>
 
             <div className="absolute top-4 left-4 z-20 rounded-lg border border-gray-200 bg-white/90 px-3 py-2 shadow-sm">

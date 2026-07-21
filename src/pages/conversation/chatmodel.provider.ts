@@ -4,7 +4,7 @@ type ChatModelContextValue = {
 	ChatModel: string;
 	setChatModel: Dispatch<SetStateAction<string>>;
 };
-
+//创建context对象，提供订阅和调用
 const ChatModelContext = createContext<ChatModelContextValue | undefined>(undefined);
 
 type ChatModelProviderProps = {
@@ -12,7 +12,7 @@ type ChatModelProviderProps = {
 	initialChatModel?: string;
 };
 
-export function ChatModelProvider({
+export function ChatModelProvider({//提供订阅
 	children,
 	initialChatModel = "qwen3.5-flash",
 }: ChatModelProviderProps) {
@@ -30,7 +30,7 @@ export function ChatModelProvider({
 	);
 }
 
-export function useChatModelContext() {
+export function useChatModelContext() {//提供出去调用
 	const context = useContext(ChatModelContext);
 
 	if (!context) {

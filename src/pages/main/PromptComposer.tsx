@@ -1,13 +1,21 @@
+import KBSelector from '../../components/KBSelector';
+
 type PromptComposerProps = {
   question: string
   onQuestionChange: (value: string) => void
   onSend: () => void
+  selectedKBId: string
+  onKBChange: (kbId: string) => void
 }
 
-function PromptComposer({ question, onQuestionChange, onSend }: PromptComposerProps) {
+function PromptComposer({ question, onQuestionChange, onSend, selectedKBId, onKBChange }: PromptComposerProps) {
   return (
     <section className="border-t border-slate-200 bg-slate-100/80 p-3 md:p-4">
 
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-slate-500">参考知识库:</span>
+        <KBSelector selectedKBId={selectedKBId} onChange={onKBChange} />
+      </div>
 
       <form className="mt-3 flex flex-col gap-3 md:flex-row" onSubmit={(e) => {
         e.preventDefault()

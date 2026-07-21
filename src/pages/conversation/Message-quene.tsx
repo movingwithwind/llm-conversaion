@@ -4,7 +4,7 @@ import rehypeHighlight from 'rehype-highlight';
 import { Virtuoso } from 'react-virtuoso';
 import type { VirtuosoHandle } from 'react-virtuoso';
 import CodePre from '../../compents/CodePre';
-import { Copy,RefreshCw, PencilLine,Check } from 'lucide-react';
+import { Copy,RefreshCw, PencilLine,Check, BookOpen } from 'lucide-react';
 import { toast } from 'sonner';
 import { useState, useRef, useEffect } from 'react';
 import {type Message } from './usechatlogic';
@@ -74,6 +74,22 @@ export default function MessageQueue({ Messages,retry,setMessages}: { Messages: 
                 >
                     {message.content}
                 </ReactMarkdown>
+                {message.sources && message.sources.length > 0 && (
+                  <div className='not-prose mt-3 rounded-lg border border-blue-200 bg-blue-50/50 p-3'>
+                    <div className='flex items-center gap-1.5 text-xs font-medium text-blue-700 mb-2'>
+                      <BookOpen className='h-3.5 w-3.5' />
+                      参考来源
+                    </div>
+                    <div className='space-y-1'>
+                      {message.sources.map((s, i) => (
+                        <div key={i} className='flex items-center justify-between text-xs text-slate-600'>
+                          <span className='truncate max-w-[70%]'>📄 {s.docName}</span>
+                          <span className='text-slate-400'>相关度 {(s.score * 100).toFixed(0)}%</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 <div className='w-full flex  h-6 pl-4 gap-2'>
                   <button className='hover:bg-gray-200 h-6 w-6 flex justify-center items-center rounded-sm' onClick={() => handleCopy(message.content,index)}>{isCopying[index] ? <Check className='h-4 w-4'/> : <Copy className='h-4 w-4'/>}</button>
                   <button className='hover:bg-gray-200 h-6 w-6 flex justify-center items-center rounded-sm' onClick={()=>{retry(1,message.id,"assistant")}}><RefreshCw className='h-4 w-4'/></button>

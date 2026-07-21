@@ -1,6 +1,9 @@
 
 import { Link, Route, Routes } from 'react-router-dom'
 import Main from './pages/main/main'
+import RagLayout from './pages/rag/RagLayout'
+import KBList from './pages/rag/KBList'
+import KBDetail from './pages/rag/KBDetail'
 
 function Home() {
 
@@ -35,6 +38,10 @@ function App() {
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/main" element={<Main />} />
+      <Route path="/rag" element={<RagLayout />}>
+        <Route index element={<KBList />} />
+        <Route path="knowledge-bases/:id" element={<KBDetail />} />
+      </Route>
     </Routes>
   )
 }

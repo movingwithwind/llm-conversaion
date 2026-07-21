@@ -1,4 +1,4 @@
-import { Clock, Trash2 } from 'lucide-react'
+import { Clock, Trash2, Database, ExternalLink } from 'lucide-react'
 import  { type nodeschemaType,models } from '../../api/schema';
 
 
@@ -100,6 +100,16 @@ function QuestionSidebar({ question, Maps,GetGraph,DeleteMap,avtivemapId, select
             </select>
           </div>
         </div>
+
+        {/* RAG 知识库管理入口 */}
+        <button
+          onClick={() => window.open('/rag', '_blank')}
+          className="flex w-full items-center justify-center gap-2 rounded-lg border border-blue-300 bg-blue-50 px-4 py-2.5 text-sm font-medium text-blue-700 transition hover:bg-blue-100 hover:border-blue-400"
+        >
+          <Database className="h-4 w-4" />
+          知识库管理
+          <ExternalLink className="h-3 w-3 text-blue-400" />
+        </button>
       </div>
     </aside>
   )

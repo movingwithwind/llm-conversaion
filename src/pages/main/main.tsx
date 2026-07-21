@@ -9,6 +9,7 @@ import { GraphModelProvider } from './graphmodel.provider'
 function ConversationContent() {
 
   const[isconversationStarted,setIsConversationStarted]=useState(false)
+  const[selectedKBId, setSelectedKBId] = useState('')
 
   const {
     question,
@@ -63,7 +64,9 @@ function ConversationContent() {
         <PromptComposer
           question={question}
           onQuestionChange={setQuestion}
-          onSend={handleSend}
+          onSend={() => handleSend(selectedKBId)}
+          selectedKBId={selectedKBId}
+          onKBChange={setSelectedKBId}
         />
       </main>
     </div>

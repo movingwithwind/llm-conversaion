@@ -22,10 +22,10 @@ function useMapLogic() {
   const [selectedNodes, setSelectedNodes] = useState<nodeschemaType>([]);
   const { GraphModel, setGraphModel } = useGraphModelContext();
 
-  const Forgraph=async (message:string)=>{
+  const Forgraph=async (message:string, knowledgeBaseId?: string)=>{
     try{
       setSelectedNodes([]);
-      const data=await graphAPi.Post(message,GraphModel);
+      const data=await graphAPi.Post(message, GraphModel, knowledgeBaseId);
       const {nodes: Backnodes, edges: Backedges, layout}: {nodes:graphnodeschemaType,edges:graphedgeschemaType,layout:GraphLayout}=data.tool_results[0].output
       console.log('Back Nodes:', Backnodes);
       console.log('Back Edges:', Backedges);
@@ -56,13 +56,13 @@ function useMapLogic() {
     }
   }
  
-  const handleSend = () => {
+  const handleSend = (knowledgeBaseId?: string) => {
             setSelectedNodes([])
             setIsGraphing(false)
             setLastQuestion(question)
             setQuestion('')
             setActiveMapId(null);
-            Forgraph(question)
+            Forgraph(question, knowledgeBaseId)
             toast.success(`Question sent: ${question}`)
           }
 

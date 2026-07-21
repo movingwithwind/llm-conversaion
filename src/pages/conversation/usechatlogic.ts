@@ -14,6 +14,7 @@ export type Message = {
     nodeLabels?: string[];
     isThinking?: boolean;
     thinkingData?: string;
+    sources?: RagSource[];
 };
 
 type backMessage = {
@@ -30,6 +31,12 @@ type backMessage = {
     }>;
 };
 
+export type RagSource = {
+    content: string;
+    docName: string;
+    score: number;
+};
+
 type DoneData = {
     client_user_id: string;
     client_assistant_id: string;
@@ -37,6 +44,7 @@ type DoneData = {
     assistantid: number;
     user_parent_id: number | null;
     assistant_parent_id: number | null;
+    sources?: RagSource[];
 }
 
 type RegenerateBody = {
@@ -146,7 +154,7 @@ export function useChatLogic(selectedNodes: nodeschemaType, ChatModel: string) {
                                 }
                                 if (msg.role === 'assistant' && msg.cliendId === data.client_assistant_id) {
                                     console.log('Updating assistant message with ID:', msg.id, 'using client_assistant_id:', data.client_assistant_id);
-                                    return { ...msg, id: data.assistantid, parent_id: data.assistant_parent_id };
+                                    return { ...msg, id: data.assistantid, parent_id: data.assistant_parent_id, sources: data.sources };
                                 }
                                 return msg;
                             })
@@ -223,7 +231,7 @@ export function useChatLogic(selectedNodes: nodeschemaType, ChatModel: string) {
     }, [selectedNodes]);
 
     // 5. POST 和 PUT 发送逻辑
-    async function fetchPostAnswer(question: string, files: File[] | null, includeBackgroundInfo: boolean, ChatModel: string) {
+    async function fetchPostAnswer(question: string, files: File[] | null, includeBackgroundInfo: boolean, ChatModel: string, knowledgeBaseId?: string) {
         abortCurrentRequest();
 
         if (!question.trim()) return;
@@ -270,6 +278,9 @@ export function useChatLogic(selectedNodes: nodeschemaType, ChatModel: string) {
             formData.append('node_ids', node_ids.join(','));
             formData.append('include_background_info', includeBackgroundInfo ? '1' : '0');
             formData.append('model', ChatModel);
+            if (knowledgeBaseId) {
+              formData.append('knowledge_base_id', knowledgeBaseId);
+            }
 
             if(files) {
                 for(const file of files) {
